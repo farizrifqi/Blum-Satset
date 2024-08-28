@@ -4,8 +4,9 @@ import dotenv from "dotenv";
 dotenv.config();
 const init = async () => {
   if (!process.env.TG_QUERY) return;
+  console.clear();
   const blum = new BlumBot(process.env.TG_QUERY);
-  await blum.run();
+  console.log(await blum.getUserInfo());
 };
 
 init();

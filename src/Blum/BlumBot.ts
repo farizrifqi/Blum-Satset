@@ -10,7 +10,7 @@ import { getRandomInt, sleep } from "./utils";
 export default class BlumBot {
   private token: string | undefined = undefined;
   private query: string;
-
+  public username: string;
   constructor(query: string) {
     this.query = query;
   }
@@ -50,14 +50,14 @@ export default class BlumBot {
             .includes("token is invalid")
         ) {
           await this._errorHandler("", true);
-          return this._getUserInfo();
+          return this._getTask();
         }
         await this._errorHandler(
           error?.response?.data?.message ?? error.response?.data,
           false
         );
       } else {
-        log("danger", "Failed to get task");
+        log("danger", `[${this.username}]`, "Failed to get task");
       }
       return undefined;
     }
@@ -71,6 +71,7 @@ export default class BlumBot {
           headers: this._getHeaders(),
         }
       );
+
       response = request.data;
       return response;
     } catch (error: any) {
@@ -81,7 +82,7 @@ export default class BlumBot {
     }
   };
   private _claimFarming = async () => {
-    log("info", "Claim farming");
+    log("info", `[${this.username}]`, "Claim farming");
     let response: any = undefined;
     try {
       const request = await axios.post(
@@ -92,6 +93,7 @@ export default class BlumBot {
         }
       );
       response = request.data;
+      log("success", `[${this.username}]`, "Farming claimed");
       return response;
     } catch (error: any) {
       if (error.response?.data) {
@@ -101,20 +103,20 @@ export default class BlumBot {
             .includes("token is invalid")
         ) {
           await this._errorHandler("", true);
-          return this._getUserInfo();
+          return this._claimFarming();
         }
         await this._errorHandler(
           error?.response?.data?.message ?? error.response?.data,
           false
         );
       } else {
-        log("danger", "Failed to claim farming");
+        log("danger", `[${this.username}]`, "Failed to claim farming");
       }
       return undefined;
     }
   };
   private _startFarming = async () => {
-    log("info", "Start farming");
+    log("info", `[${this.username}]`, "Start farming");
     let response: any = undefined;
     try {
       const request = await axios.post(
@@ -134,20 +136,53 @@ export default class BlumBot {
             .includes("token is invalid")
         ) {
           await this._errorHandler("", true);
-          return this._getUserInfo();
+          return this._startFarming();
         }
         await this._errorHandler(
           error?.response?.data?.message ?? error.response?.data,
           false
         );
       } else {
-        log("danger", "Failed to start farming");
+        log("danger", `[${this.username}]`, "Failed to start farming");
+      }
+      return undefined;
+    }
+  };
+  private _dailyReward = async () => {
+    log("info", `[${this.username}]`, "Checking daily reward");
+    let response: any = undefined;
+    try {
+      const request = await axios.post(
+        BLUM_GAME_DOMAIN + "/api/v1/daily-reward?offset=-420",
+        {},
+        {
+          headers: this._getHeaders(),
+        }
+      );
+      response = request.data;
+      return response;
+    } catch (error: any) {
+      if (error.response?.data) {
+        if (
+          error?.response?.data?.message
+            ?.toLowerCase()
+            .includes("token is invalid")
+        ) {
+          await this._errorHandler("", true);
+          return this._dailyReward();
+        }
+        await this._errorHandler(
+          error?.response?.data?.message ?? error.response?.data,
+          false
+        );
+      } else {
+        log("danger", `[${this.username}]`, "Failed to start farming");
       }
       return undefined;
     }
   };
   private _startTask = async ({ id, title }: any) => {
-    log("info", "Start task", title);
+    log("info", `[${this.username}]`, "Start task", title);
     let response: any = undefined;
     try {
       const request = await axios.post(
@@ -167,20 +202,20 @@ export default class BlumBot {
             .includes("token is invalid")
         ) {
           await this._errorHandler("", true);
-          return this._getUserInfo();
+          return this._startTask({ id, title });
         }
         await this._errorHandler(
           error?.response?.data?.message ?? error.response?.data,
           false
         );
       } else {
-        log("danger", "Failed to start task", title);
+        log("danger", `[${this.username}]`, "Failed to start task", title);
       }
       return undefined;
     }
   };
   private _startGame = async () => {
-    log("info", "Start game");
+    log("info", `[${this.username}]`, "Start game");
     let response: any = undefined;
     try {
       const request = await axios.post(
@@ -200,14 +235,14 @@ export default class BlumBot {
             .includes("token is invalid")
         ) {
           await this._errorHandler("", true);
-          return this._getUserInfo();
+          return this._startGame();
         }
         await this._errorHandler(
           error?.response?.data?.message ?? error.response?.data,
           false
         );
       } else {
-        log("danger", "Failed to play game");
+        log("danger", `[${this.username}]`, "Failed to play game");
       }
       return undefined;
     }
@@ -215,7 +250,7 @@ export default class BlumBot {
   private _claimGame = async (gameId: any) => {
     let points = getRandomInt(256, 278);
 
-    log("info", "Claiming game", gameId);
+    log("info", `[${this.username}]`, "Claiming game", gameId);
     let response: any = undefined;
     try {
       const request = await axios.post(
@@ -226,7 +261,7 @@ export default class BlumBot {
         }
       );
       response = request.data;
-      log("info", "Game rewarded", points);
+      log("success", `[${this.username}]`, "Game rewarded", points);
       return response;
     } catch (error: any) {
       if (error.response?.data) {
@@ -236,20 +271,20 @@ export default class BlumBot {
             .includes("token is invalid")
         ) {
           await this._errorHandler("", true);
-          return this._getUserInfo();
+          return this._claimGame(gameId);
         }
         await this._errorHandler(
           error?.response?.data?.message ?? error.response?.data,
           false
         );
       } else {
-        log("danger", "Failed to play game");
+        log("danger", `[${this.username}]`, "Failed to play game");
       }
       return undefined;
     }
   };
   private _claimTask = async ({ id, title }: any) => {
-    log("info", "[Claim Task]", title);
+    log("info", `[${this.username}]`, "[Claim Task]", title);
     let response: any = undefined;
     try {
       const request = await axios.post(
@@ -269,25 +304,26 @@ export default class BlumBot {
             .includes("token is invalid")
         ) {
           await this._errorHandler("", true);
-          return this._getUserInfo();
+          return this._claimTask({ id, title });
         }
         await this._errorHandler(
           error?.response?.data?.message ?? error.response?.data,
           false
         );
       } else {
-        log("danger", "Failed to claim task", title);
+        log("danger", `[${this.username}]`, "Failed to claim task", title);
       }
       return undefined;
     }
   };
   private _refreshToken = async (tries: number = 1) => {
     if (tries > 3) {
-      log("danger", "Failed to refresh token");
+      log("danger", `[${this.username}]`, "Failed to refresh token");
       process.exit(0);
     }
-    log("Attempt to refresh token", `${tries}/3`);
-
+    if (this.username) {
+      log(`[${this.username}]`, "Attempt to refresh token", `${tries}/3`);
+    }
     let response: any = undefined;
     try {
       const request = await axios.post(
@@ -307,7 +343,10 @@ export default class BlumBot {
       response = request.data;
       if (!response?.token?.refresh) throw new Error("Failed to refresh token");
       this.token = response?.token?.refresh;
-      log("success", "Token refreshed");
+      if (this.username) {
+        log("success", `[${this.username}]`, "Token refreshed");
+      }
+
       return;
     } catch (error: any) {
       console.log({ error });
@@ -337,7 +376,7 @@ export default class BlumBot {
           false
         );
       } else {
-        log("danger", "Failed to get user info");
+        log("danger", `[${this.username}]`, "Failed to get user info");
       }
       return undefined;
     }
@@ -346,16 +385,31 @@ export default class BlumBot {
     if (isRefresh) {
       await this._refreshToken();
     } else {
-      log("warning", errorData ?? "");
+      log("warning", `[${this.username}]`, errorData ?? "");
     }
     return;
   };
+  private _init = async (i = 0) => {
+    if (i >= 5) return;
+    try {
+      if (!this.token) await this._refreshToken();
+      const userInfo = await this._getUserInfo();
+      if (!userInfo?.username) return false;
+      this.username = userInfo.username;
+      return true;
+    } catch (err) {
+      i++;
+      await sleep(5000);
+      return await this._init(i);
+    }
+  };
+
   getUserInfo = async () => {
     return await this._getUserInfo();
   };
   getTask = async (print: Boolean = false) => {
     const tasks = await this._getTask();
-    if (!tasks) return undefined;
+    if (!tasks) return [];
 
     const subtasks = tasks.flatMap((task: any) => task.tasks);
     if (!print) return subtasks;
@@ -372,33 +426,59 @@ export default class BlumBot {
   };
   getBalance = async (print = true) => {
     const balance = await this._getBalance();
-    if (balance && print) {
-      log("info", "Balance", balance.availableBalance);
+    console.log({ balance });
+    if (balance) {
+      if (print) {
+        log("info", `[${this.username}]`, "Balance", balance.availableBalance);
+      }
     }
   };
   run = async () => {
-    if (!this.token) await this._refreshToken();
-    Promise.all([this.runFarming(), this.runGame(), this.runTask()]);
+    await this._init();
+    Promise.all([
+      this.runFarming(),
+      this.runGame(),
+      this.runTask(),
+      this.runDailyReward(),
+    ]);
   };
-  runGame = async () => {
-    const balance = await this._getBalance();
-    if (balance) {
-      if (balance.playPasses == 0) {
-        log("info", "No game passes");
-        await sleep(60 * 1000 * 60 * 3);
-      } else {
-        const gameResult = await this._startGame();
-        await sleep(70 * 1000);
-        if (gameResult?.gameId) {
-          log("success", "Game completed", gameResult.gameId);
-          await this._claimGame(gameResult.gameId);
-        }
-        await sleep(60 * 1000 * 5);
-      }
+  runDailyReward = async () => {
+    const dailyReward = await this._dailyReward();
+    if (dailyReward?.message === "OK") {
+      log("success", `[${this.username}]`, "Claimed daily reward");
+    } else if (dailyReward?.message === "same day") {
+      log(`[${this.username}]`, "Already claimed today");
     } else {
-      log("info", "Failed to get balance");
-      await sleep(60 * 1000 * 60 * 1);
+      log("warning", `[${this.username}]`, "Daily reward not ready");
     }
+    await sleep(1000 * 60 * 60 * 24 + 10000);
+    return await this.runDailyReward();
+  };
+  runGame = async (i = 0) => {
+    if (i > 0) {
+      const gameResult = await this._startGame();
+      await sleep(20 * 1000);
+      if (gameResult?.gameId) {
+        log(
+          "success",
+          `[${this.username}]`,
+          "Game completed",
+          gameResult.gameId
+        );
+        await this._claimGame(gameResult.gameId);
+      }
+      if (i - 1 > 0) return await this.runGame(i - 1);
+    } else {
+      const balance = await this._getBalance();
+      if (balance) {
+        if (balance.playPasses > 0) return this.runGame(balance.playPasses);
+        log(`[${this.username}]`, "No game passes");
+      } else {
+        log("info", `[${this.username}]`, "Failed to get balance");
+        await sleep(60 * 1000 * 60 * 1);
+      }
+    }
+    await sleep(60 * 1000 * 60 * 6);
     return await this.runGame();
   };
   runFarming = async () => {
@@ -414,16 +494,22 @@ export default class BlumBot {
           await sleep(1000 * 30);
           await this._startFarming();
         } else {
-          log("info", "Still farming");
+          log(`[${this.username}]`, "Still farming");
+          log(
+            "success",
+            `[${this.username}]`,
+            "Balance",
+            balance.availableBalance
+          );
           if (balance.farming.endTime - balance.timestamp > 1000 * 60 * 30) {
-            await sleep(1000 * 60 * 30);
+            await sleep(1000 * 60 * 60);
           } else {
-            await sleep(balance.farming.endTime - balance.timestamp);
+            await sleep(balance.farming.endTime - balance.timestamp + 5000);
           }
         }
       }
     } else {
-      log("info", "Failed to get balance");
+      log("info", `[${this.username}]`, "Failed to get balance");
       await sleep(60 * 1000 * 60 * 1);
     }
     return await this.runFarming();
@@ -460,7 +546,7 @@ export default class BlumBot {
           tasks.filter((task: any) => task.status == "READY_FOR_CLAIM").length >
           0
         ) {
-          log("info", "Claiming un-checked tasks...");
+          log("info", `[${this.username}]`, "Claiming un-checked tasks...");
           await Promise.all(
             tasks
               .filter((task: any) => task.status == "READY_FOR_CLAIM")
@@ -470,12 +556,12 @@ export default class BlumBot {
           );
         }
       } else {
-        log("info", "No tasks to run");
+        log(`[${this.username}]`, "No tasks to run");
       }
     } else {
-      log("info", "Failed to run task");
+      log("danger", `[${this.username}]`, "Failed to run task");
     }
-    await sleep(60 * 1000 * 60 * 8);
+    await sleep(60 * 1000 * 60 * 3);
     return await this.runTask();
   };
 
