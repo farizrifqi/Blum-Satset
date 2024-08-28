@@ -1,8 +1,4 @@
-import axios, {
-  AxiosHeaders,
-  AxiosRequestHeaders,
-  RawAxiosRequestHeaders,
-} from "axios";
+import axios, { RawAxiosRequestHeaders } from "axios";
 import { BLUM_GAME_DOMAIN, BLUM_GATEWAY, TRIBE } from "../const";
 import { log } from "../log";
 import { getRandomInt, sleep } from "./utils";
