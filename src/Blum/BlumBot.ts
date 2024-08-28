@@ -489,11 +489,14 @@ export default class BlumBot {
     const balance = await this._getBalance();
     if (balance) {
       if (!balance.farming?.startTime) {
+        await sleep(1000 * 60);
         await this._claimFarming();
         await sleep(1000 * 30);
         await this._startFarming();
       } else {
         if (balance.farming?.endTime <= balance.timestamp) {
+          await sleep(1000 * 60);
+
           await this._claimFarming();
           await sleep(1000 * 30);
           await this._startFarming();

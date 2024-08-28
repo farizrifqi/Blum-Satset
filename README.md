@@ -2,6 +2,17 @@
 
 Bot to automate any task on [Blum](https://t.me/BlumCryptoBot).
 
+### Requirements
+
+- [ts-node](https://typestrong.org/ts-node/) or [bun.sh](https://bun.sh/).
+
+### Quickstart
+
+1. Install `npm install`
+2. Create `query.txt`
+3. Put the telegram app data each line
+4. Run `npx ts-node index.ts` or `bun run index.ts`
+
 ### Automaton
 
 - [x] Auto Farming
@@ -9,17 +20,3 @@ Bot to automate any task on [Blum](https://t.me/BlumCryptoBot).
 - [x] Auto Task
 - [x] Auto Claim Daily Rewards
 - [ ] Auto Claim Friends Balance
-
-### Quickstart
-
-1. Rename `.env.example` to `.env`
-2. Fill the **TG_QUERY**
-3. Run
-   > bun run index.ts
-
-#### Multi accounts
-
-Create `query.txt`
-Put the telegram app data each line then run:
-
-> bun run multi.ts

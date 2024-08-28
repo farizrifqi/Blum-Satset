@@ -7,7 +7,9 @@ const zeroPad = (str: string, s = false) => {
 };
 
 export const currentTime = () => {
-  let date_ob = new Date(new Date().toLocaleString("en"));
+  let date_ob = new Date(
+    new Date().toLocaleString("en-US", { timeZone: "Asia/Jakarta" })
+  );
   let hours = zeroPad(date_ob.getHours().toString());
   let minutes = zeroPad(date_ob.getMinutes().toString());
   let seconds = zeroPad(date_ob.getSeconds().toString());
