@@ -1,0 +1,17 @@
+{
+  "name": "blumsatset",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.ts",
+  "scripts": {
+    "test": "bun run index.ts"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@colors/colors": "^1.6.0",
+    "axios": "^1.7.5",
+    "dotenv": "^16.4.5",
+    "fs": "^0.0.1-security"
+  }
+}
