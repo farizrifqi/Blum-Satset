@@ -349,7 +349,11 @@ export default class BlumBot {
 
       return;
     } catch (error: any) {
-      console.log({ error });
+      log(
+        "danger",
+        `[${this.username}]`,
+        "Failed refresh token - engine error"
+      );
     }
     return this._refreshToken(tries + 1);
   };
