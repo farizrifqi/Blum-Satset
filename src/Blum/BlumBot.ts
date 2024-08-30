@@ -89,6 +89,13 @@ export default class BlumBot {
       return response;
     } catch (error: any) {
       if (error.response?.data) {
+        if (
+          error?.response?.data?.message?.toLowerCase() ==
+          "it's too early to claim"
+        ) {
+          await sleep(1000 * 15000);
+          return await this._claimFarming();
+        }
         if (this._isTokenValid(error?.response?.data?.message)) {
           await this._errorHandler("", true);
           return this._claimFarming();
