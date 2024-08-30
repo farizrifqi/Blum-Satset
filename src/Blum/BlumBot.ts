@@ -237,14 +237,15 @@ export default class BlumBot {
       return response;
     } catch (error: any) {
       if (error.response?.data) {
-        if (this._isTokenValid(error?.response?.data?.message)) {
-          await this._errorHandler("", true);
-          return this._claimGame(gameId);
-        } else if (
+        if (
           error?.response?.data?.message.toLowerCase() ==
           "game session not finished"
         ) {
           await sleep(10000);
+          return this._claimGame(gameId);
+        }
+        if (this._isTokenValid(error?.response?.data?.message)) {
+          await this._errorHandler("", true);
           return this._claimGame(gameId);
         }
         await this._errorHandler(
