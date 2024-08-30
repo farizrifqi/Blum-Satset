@@ -40,11 +40,7 @@ export default class BlumBot {
       return response;
     } catch (error: any) {
       if (error.response?.data) {
-        if (
-          error?.response?.data?.message
-            ?.toLowerCase()
-            .includes("token is invalid")
-        ) {
+        if (this._isTokenValid(error?.response?.data?.message)) {
           await this._errorHandler("", true);
           return this._getTask();
         }
@@ -93,11 +89,7 @@ export default class BlumBot {
       return response;
     } catch (error: any) {
       if (error.response?.data) {
-        if (
-          error?.response?.data?.message
-            ?.toLowerCase()
-            .includes("token is invalid")
-        ) {
+        if (this._isTokenValid(error?.response?.data?.message)) {
           await this._errorHandler("", true);
           return this._claimFarming();
         }
@@ -126,11 +118,7 @@ export default class BlumBot {
       return response;
     } catch (error: any) {
       if (error.response?.data) {
-        if (
-          error?.response?.data?.message
-            ?.toLowerCase()
-            .includes("token is invalid")
-        ) {
+        if (this._isTokenValid(error?.response?.data?.message)) {
           await this._errorHandler("", true);
           return this._startFarming();
         }
@@ -159,11 +147,7 @@ export default class BlumBot {
       return response;
     } catch (error: any) {
       if (error.response?.data) {
-        if (
-          error?.response?.data?.message
-            ?.toLowerCase()
-            .includes("token is invalid")
-        ) {
+        if (this._isTokenValid(error?.response?.data?.message)) {
           await this._errorHandler("", true);
           return this._dailyReward();
         }
@@ -192,11 +176,7 @@ export default class BlumBot {
       return response;
     } catch (error: any) {
       if (error.response?.data) {
-        if (
-          error?.response?.data?.message
-            ?.toLowerCase()
-            .includes("token is invalid")
-        ) {
+        if (this._isTokenValid(error?.response?.data?.message)) {
           await this._errorHandler("", true);
           return this._startTask({ id, title });
         }
@@ -225,11 +205,7 @@ export default class BlumBot {
       return response;
     } catch (error: any) {
       if (error.response?.data) {
-        if (
-          error?.response?.data?.message
-            ?.toLowerCase()
-            .includes("token is invalid")
-        ) {
+        if (this._isTokenValid(error?.response?.data?.message)) {
           await this._errorHandler("", true);
           return this._startGame();
         }
@@ -261,11 +237,7 @@ export default class BlumBot {
       return response;
     } catch (error: any) {
       if (error.response?.data) {
-        if (
-          error?.response?.data?.message
-            ?.toLowerCase()
-            .includes("token is invalid")
-        ) {
+        if (this._isTokenValid(error?.response?.data?.message)) {
           await this._errorHandler("", true);
           return this._claimGame(gameId);
         }
@@ -294,11 +266,7 @@ export default class BlumBot {
       return response;
     } catch (error: any) {
       if (error.response?.data) {
-        if (
-          error?.response?.data?.message
-            ?.toLowerCase()
-            .includes("token is invalid")
-        ) {
+        if (this._isTokenValid(error?.response?.data?.message)) {
           await this._errorHandler("", true);
           return this._claimTask({ id, title });
         }
@@ -363,11 +331,7 @@ export default class BlumBot {
       return response;
     } catch (error: any) {
       if (error.response?.data) {
-        if (
-          error?.response?.data?.message
-            ?.toLowerCase()
-            .includes("token is invalid")
-        ) {
+        if (this._isTokenValid(error?.response?.data?.message)) {
           await this._errorHandler("", true);
           return this._getUserInfo();
         }
@@ -403,7 +367,11 @@ export default class BlumBot {
       return await this._init(i);
     }
   };
-
+  private _isTokenValid = (msg: string) => {
+    if (msg.toLowerCase().includes("token is invalid")) return true;
+    if (msg.toLowerCase().includes("invalid jwt token")) return true;
+    return false;
+  };
   getUserInfo = async () => {
     return await this._getUserInfo();
   };
