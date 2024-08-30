@@ -240,6 +240,12 @@ export default class BlumBot {
         if (this._isTokenValid(error?.response?.data?.message)) {
           await this._errorHandler("", true);
           return this._claimGame(gameId);
+        } else if (
+          error?.response?.data?.message.toLowerCase() ==
+          "game session not finished"
+        ) {
+          await sleep(10000);
+          return this._claimGame(gameId);
         }
         await this._errorHandler(
           error?.response?.data?.message ?? error.response?.data,
@@ -425,7 +431,7 @@ export default class BlumBot {
   runGame = async (i = 0) => {
     if (i > 0) {
       const gameResult = await this._startGame();
-      await sleep(20 * 1000);
+      await sleep(30 * 1000);
       if (gameResult?.gameId) {
         log(
           "success",
