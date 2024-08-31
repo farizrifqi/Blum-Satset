@@ -511,6 +511,8 @@ export default class BlumBot {
         } else {
           log("danger", `[${this.username}]`, "Failed claim friends balance");
         }
+      } else {
+        log(`[${this.username}]`, "No friends balance");
       }
     } else {
       log("danger", `[${this.username}]`, "Failed check friends balance");
