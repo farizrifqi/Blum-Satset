@@ -391,6 +391,60 @@ export default class BlumBot {
     if (msg.toLowerCase().includes("invalid jwt token")) return true;
     return false;
   };
+  private _getFriendsBalance = async () => {
+    // log("info", `[${this.username}]`, "[FRIENDS]", "Checking friends balance");
+    let response: any = undefined;
+    try {
+      const request = await axios.get(BLUM_GATEWAY + "/v1/friends/balance", {
+        headers: this._getHeaders(),
+      });
+      response = request.data;
+      return response;
+    } catch (error: any) {
+      if (error.response?.data) {
+        if (this._isTokenValid(error?.response?.data?.message)) {
+          await this._errorHandler("", true);
+          return this._getFriendsBalance();
+        }
+        await this._errorHandler(
+          error?.response?.data?.message ?? error.response?.data,
+          false
+        );
+      } else {
+        log("danger", `[${this.username}]`, "Failed to check friends balance");
+      }
+      return undefined;
+    }
+  };
+  private _claimFriendsBalance = async () => {
+    // log("info", `[${this.username}]`, "[FRIENDS]", "Claiming friends balance");
+    let response: any = undefined;
+    try {
+      const request = await axios.post(
+        BLUM_GATEWAY + "/v1/friends/claim",
+        {},
+        {
+          headers: this._getHeaders(),
+        }
+      );
+      response = request.data;
+      return response;
+    } catch (error: any) {
+      if (error.response?.data) {
+        if (this._isTokenValid(error?.response?.data?.message)) {
+          await this._errorHandler("", true);
+          return this._claimFriendsBalance();
+        }
+        await this._errorHandler(
+          error?.response?.data?.message ?? error.response?.data,
+          false
+        );
+      } else {
+        log("danger", `[${this.username}]`, "Failed to claim friends balance");
+      }
+      return undefined;
+    }
+  };
   getUserInfo = async () => {
     return await this._getUserInfo();
   };
@@ -427,6 +481,7 @@ export default class BlumBot {
       this.runGame(),
       this.runTask(),
       this.runDailyReward(),
+      this.runFriendsBalance(),
     ]);
   };
   runDailyReward = async () => {
@@ -440,6 +495,28 @@ export default class BlumBot {
     }
     await sleep(1000 * 60 * 60 * 4 + 10000);
     return await this.runDailyReward();
+  };
+  runFriendsBalance = async () => {
+    const friendsbalance = await this._getFriendsBalance();
+    if (friendsbalance) {
+      if (friendsbalance.canClaim) {
+        const claim = await this._claimFriendsBalance();
+        if (claim) {
+          log(
+            "success",
+            `[${this.username}]`,
+            "Claimed friends balance",
+            `${friendsbalance.amountForClaim} points`
+          );
+        } else {
+          log("danger", `[${this.username}]`, "Failed claim friends balance");
+        }
+      }
+    } else {
+      log("danger", `[${this.username}]`, "Failed check friends balance");
+    }
+    await sleep(60 * 1000 * 60 * 4);
+    return await this.runFriendsBalance();
   };
   runGame = async (i = 0) => {
     if (i > 0) {
