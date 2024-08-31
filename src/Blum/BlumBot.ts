@@ -96,6 +96,11 @@ export default class BlumBot {
           await sleep(1000 * 15000);
           return await this._claimFarming();
         }
+        if (
+          error?.response?.data?.message?.toLowerCase() == "need to start farm"
+        ) {
+          return await this._startFarming();
+        }
         if (this._isTokenValid(error?.response?.data?.message)) {
           await this._errorHandler("", true);
           return this._claimFarming();
@@ -433,7 +438,7 @@ export default class BlumBot {
     } else {
       log("warning", `[${this.username}]`, "Daily reward not ready");
     }
-    await sleep(1000 * 60 * 60 * 24 + 10000);
+    await sleep(1000 * 60 * 60 * 4 + 10000);
     return await this.runDailyReward();
   };
   runGame = async (i = 0) => {
