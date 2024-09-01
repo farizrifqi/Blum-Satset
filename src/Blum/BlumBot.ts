@@ -476,14 +476,19 @@ export default class BlumBot {
     }
   };
   run = async () => {
-    await this._init();
-    Promise.all([
-      this.runFarming(),
-      this.runGame(),
-      this.runTask(),
-      this.runDailyReward(),
-      this.runFriendsBalance(),
-    ]);
+    try {
+      await this._init();
+      Promise.all([
+        this.runFarming(),
+        this.runGame(),
+        this.runTask(),
+        this.runDailyReward(),
+        this.runFriendsBalance(),
+      ]);
+    } catch (err) {
+      await sleep(15000);
+      return await this.run();
+    }
   };
   runDailyReward = async () => {
     const dailyReward = await this._dailyReward();
