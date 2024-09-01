@@ -387,12 +387,13 @@ export default class BlumBot {
     }
   };
   private _isTokenValid = (msg: string) => {
+    if (!msg) return false;
     if (msg.toLowerCase().includes("token is invalid")) return true;
     if (msg.toLowerCase().includes("invalid jwt token")) return true;
     return false;
   };
   private _getFriendsBalance = async () => {
-    // log("info", `[${this.username}]`, "[FRIENDS]", "Checking friends balance");
+    log("info", `[${this.username}]`, "[FRIENDS]", "Checking friends balance");
     let response: any = undefined;
     try {
       const request = await axios.get(BLUM_GATEWAY + "/v1/friends/balance", {
