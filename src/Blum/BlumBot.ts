@@ -204,6 +204,7 @@ export default class BlumBot {
     }
   };
   private _startGame = async () => {
+    await sleep(getRandomInt(500, 9500));
     log("info", `[${this.username}]`, "Start game");
     let response: any = undefined;
     try {
@@ -272,7 +273,7 @@ export default class BlumBot {
     }
   };
   private _claimTask = async ({ id, title }: any) => {
-    log("info", `[${this.username}]`, "[Claim Task]", title);
+    log("info", `[${this.username}]`, "[TASK]", title, "CLAIMING");
     let response: any = undefined;
     try {
       const request = await axios.post(
@@ -283,12 +284,14 @@ export default class BlumBot {
         }
       );
       response = request.data;
+      log("success", `[${this.username}]`, "[TASK]", title, "Claimed");
+
       return response;
     } catch (error: any) {
       if (error.response?.data) {
         if (this._isTokenValid(error?.response?.data?.message)) {
           await this._errorHandler("", true);
-          return this._claimTask({ id, title });
+          return await this._claimTask({ id, title });
         }
         await this._errorHandler(
           error?.response?.data?.message ?? error.response?.data,
@@ -366,6 +369,12 @@ export default class BlumBot {
     }
   };
   private _errorHandler = async (errorData: any, isRefresh = false) => {
+    if (
+      !this.username ||
+      this.username == undefined ||
+      this.username == "undefined"
+    )
+      await this._init();
     if (isRefresh) {
       await this._refreshToken();
     } else {
@@ -384,6 +393,8 @@ export default class BlumBot {
       const userInfo = await this._getUserInfo();
       if (!userInfo?.username || userInfo?.username == undefined) return false;
       this.username = userInfo.username;
+      if (this.username == undefined || this.username == "undefined")
+        return await this._init(i);
       return true;
     } catch (err) {
       i++;
