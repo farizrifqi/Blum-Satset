@@ -149,7 +149,7 @@ export default class BlumBot {
     let response: any = undefined;
     try {
       const request = await axios.post(
-        BLUM_GAME_DOMAIN + "/api/v1/daily-reward?offset=-420",
+        BLUM_GAME_DOMAIN + "/api/v1/daily-reward?offset=-480",
         {},
         {
           headers: this._getHeaders(),
@@ -167,8 +167,9 @@ export default class BlumBot {
           error?.response?.data?.message ?? error.response?.data,
           false
         );
+        return error?.response?.data;
       } else {
-        log("danger", `[${this.username}]`, "Failed to start farming");
+        log("danger", `[${this.username}]`, "Failed to dailyReward");
       }
       return undefined;
     }
@@ -559,6 +560,8 @@ export default class BlumBot {
     return await this.runGame();
   };
   runFarming = async () => {
+    log(`[${this.username}]`, "[FARMING]");
+
     const balance = await this._getBalance();
     if (balance) {
       if (!balance.farming?.startTime) {
@@ -574,7 +577,6 @@ export default class BlumBot {
           await sleep(1000 * 30);
           await this._startFarming();
         } else {
-          log(`[${this.username}]`, "Still farming");
           log(
             "success",
             `[${this.username}]`,

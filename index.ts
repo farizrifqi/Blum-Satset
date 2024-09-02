@@ -24,10 +24,12 @@ const start = async () => {
   const loadedQuery = loadQuery();
   console.log(loadedQuery.length + " account(s) loaded");
   let a: BlumBot[] = [];
+  let i = 1;
   console.log("Initiating...");
   for await (const q of loadedQuery) {
     a.push(await initBot(q));
-    console.log("Initiated");
+    console.log("Initiated", `${i}/${loadedQuery.length}`);
+    i++;
   }
   console.clear();
   console.log("All Initiated");
