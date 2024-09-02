@@ -479,10 +479,10 @@ export default class BlumBot {
     try {
       await this._init();
       Promise.all([
+        this.runDailyReward(),
         this.runFarming(),
         this.runGame(),
         this.runTask(),
-        this.runDailyReward(),
         this.runFriendsBalance(),
       ]);
     } catch (err) {
@@ -499,7 +499,7 @@ export default class BlumBot {
     } else {
       log("warning", `[${this.username}]`, "Daily reward not ready");
     }
-    await sleep(1000 * 60 * 60 * 4 + 10000);
+    await sleep(60 * 1000 * 60 * 8 + 1000 * 60 * 5);
     return await this.runDailyReward();
   };
   runFriendsBalance = async () => {
@@ -523,7 +523,7 @@ export default class BlumBot {
     } else {
       log("danger", `[${this.username}]`, "Failed check friends balance");
     }
-    await sleep(60 * 1000 * 60 * 4);
+    await sleep(60 * 1000 * 60 * 8 + 1000 * 60 * 5);
     return await this.runFriendsBalance();
   };
   runGame = async (i = 0) => {
@@ -550,7 +550,7 @@ export default class BlumBot {
         await sleep(60 * 1000 * 60 * 1);
       }
     }
-    await sleep(60 * 1000 * 60 * 6);
+    await sleep(60 * 1000 * 60 * 8 + 1000 * 60 * 5);
     return await this.runGame();
   };
   runFarming = async () => {
@@ -577,9 +577,11 @@ export default class BlumBot {
             balance.availableBalance
           );
           if (balance.farming.endTime - balance.timestamp > 1000 * 60 * 30) {
-            await sleep(1000 * 60 * 60);
+            await sleep(60 * 1000 * 60 * 4 + 1000 * 60 * 5);
           } else {
-            await sleep(balance.farming.endTime - balance.timestamp + 5000);
+            await sleep(
+              balance.farming.endTime - balance.timestamp + 1000 * 60 * 5
+            );
           }
         }
       }
@@ -636,7 +638,7 @@ export default class BlumBot {
     } else {
       log("danger", `[${this.username}]`, "Failed to run task");
     }
-    await sleep(60 * 1000 * 60 * 3);
+    await sleep(60 * 1000 * 60 * 4);
     return await this.runTask();
   };
 
