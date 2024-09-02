@@ -203,7 +203,8 @@ export default class BlumBot {
       return undefined;
     }
   };
-  private _startGame = async () => {
+  private _startGame = async (i = 0) => {
+    i++;
     await sleep(getRandomInt(500, 8500));
     log("info", `[${this.username}]`, "Start game");
     let response: any = undefined;
@@ -226,7 +227,7 @@ export default class BlumBot {
         if (error?.response?.data?.message) {
           if (error?.response?.data?.message == "cannot start game") {
             await sleep(getRandomInt(500, 3000));
-            return await this._startGame();
+            if (i > 5) return await this._startGame();
           }
         }
         await this._errorHandler(
