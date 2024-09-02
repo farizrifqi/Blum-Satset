@@ -382,7 +382,7 @@ export default class BlumBot {
         if (!tes) throw new Error("");
       }
       const userInfo = await this._getUserInfo();
-      if (!userInfo?.username) return false;
+      if (!userInfo?.username || userInfo?.username == undefined) return false;
       this.username = userInfo.username;
       return true;
     } catch (err) {
@@ -568,7 +568,6 @@ export default class BlumBot {
   };
   runFarming = async () => {
     log(`[${this.username}]`, "[FARMING]");
-
     const balance = await this._getBalance();
     if (balance) {
       if (!balance.farming?.startTime) {
