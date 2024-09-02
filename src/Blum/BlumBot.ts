@@ -68,7 +68,7 @@ export default class BlumBot {
       return response;
     } catch (error: any) {
       if (error.response?.data?.message) {
-        console.log(error.response.data.message);
+        log("danger", `[${this.username}]`, "Failed getBalance");
       }
       return undefined;
     }
@@ -300,9 +300,10 @@ export default class BlumBot {
     }
   };
   private _refreshToken = async (tries: number = 1) => {
+    await sleep(getRandomInt(500, 2000));
     if (tries > 3) {
-      log("danger", `[${this.username}]`, "Failed to refresh token");
-      process.exit(0);
+      log("danger", "Failed to refresh token");
+      return false;
     }
     if (this.username) {
       log(`[${this.username}]`, "Attempt to refresh token", `${tries}/3`);
@@ -324,19 +325,18 @@ export default class BlumBot {
         }
       );
       response = request.data;
-      if (!response?.token?.refresh) throw new Error("Failed to refresh token");
+      if (!response?.token?.refresh) throw new Error("");
       this.token = response?.token?.refresh;
       if (this.username) {
         log("success", `[${this.username}]`, "Token refreshed");
       }
-
       return;
     } catch (error: any) {
-      log(
-        "danger",
-        `[${this.username}]`,
-        "Failed refresh token - engine error"
-      );
+      // log(
+      //   "danger",
+      //   `[${this.username}]`,
+      //   "Failed refresh token - engine error"
+      // );
     }
     return this._refreshToken(tries + 1);
   };
@@ -368,21 +368,25 @@ export default class BlumBot {
     if (isRefresh) {
       await this._refreshToken();
     } else {
-      log("warning", `[${this.username}]`, errorData ?? "");
+      // log("warning", `[${this.username}]`, "");
     }
     return;
   };
-  private _init = async (i = 0) => {
+  _init = async (i = 0) => {
     if (i >= 5) return;
+    await sleep(getRandomInt(100, 1000));
     try {
-      if (!this.token) await this._refreshToken();
+      if (!this.token) {
+        const tes = await this._refreshToken();
+        if (!tes) throw new Error("");
+      }
       const userInfo = await this._getUserInfo();
       if (!userInfo?.username) return false;
       this.username = userInfo.username;
       return true;
     } catch (err) {
       i++;
-      await sleep(5000);
+      await sleep(getRandomInt(100, 2500));
       return await this._init(i);
     }
   };
@@ -468,7 +472,6 @@ export default class BlumBot {
   };
   getBalance = async (print = true) => {
     const balance = await this._getBalance();
-    console.log({ balance });
     if (balance) {
       if (print) {
         log("info", `[${this.username}]`, "Balance", balance.availableBalance);
@@ -477,16 +480,19 @@ export default class BlumBot {
   };
   run = async () => {
     try {
-      await this._init();
-      Promise.all([
-        this.runDailyReward(),
-        this.runFarming(),
-        this.runGame(),
-        this.runTask(),
-        this.runFriendsBalance(),
-      ]);
+      await sleep(getRandomInt(500, 2000));
+      if (!this.token) await this._init();
+      await this.runDailyReward(),
+        Promise.all([
+          this.runFarming(),
+          this.runGame(),
+          this.runTask(),
+          this.runFriendsBalance(),
+        ]);
+      // await sleep(60 * 1000 * 8 + 60 * 1000 * 5);
+      // return await this.run();
     } catch (err) {
-      await sleep(15000);
+      await sleep(getRandomInt(500, 2000) * getRandomInt(1, 15));
       return await this.run();
     }
   };
@@ -547,23 +553,22 @@ export default class BlumBot {
         log(`[${this.username}]`, "No game passes");
       } else {
         log("info", `[${this.username}]`, "Failed to get balance");
-        await sleep(60 * 1000 * 60 * 1);
+        await sleep(1000 * 60 * 5);
       }
     }
-    await sleep(60 * 1000 * 60 * 8 + 1000 * 60 * 5);
     return await this.runGame();
   };
   runFarming = async () => {
     const balance = await this._getBalance();
     if (balance) {
       if (!balance.farming?.startTime) {
-        await sleep(1000 * 60);
+        await sleep(1000 * 30);
         await this._claimFarming();
         await sleep(1000 * 30);
         await this._startFarming();
       } else {
         if (balance.farming?.endTime <= balance.timestamp) {
-          await sleep(1000 * 60);
+          await sleep(1000 * 30);
 
           await this._claimFarming();
           await sleep(1000 * 30);
@@ -609,14 +614,14 @@ export default class BlumBot {
             .map((task: any) =>
               this._startTask({ id: task.id, title: task.title }).then((a) => {
                 if (a) {
-                  sleep(10000).then(() => {
+                  sleep(getRandomInt(500, 8000)).then(() => {
                     this._claimTask({ id: task.id, title: task.title });
                   });
                 }
               })
             )
         );
-
+        sleep(getRandomInt(500, 3000));
         // Re check task
         tasks = await this.getTask(print);
         if (
@@ -628,7 +633,9 @@ export default class BlumBot {
             tasks
               .filter((task: any) => task.status == "READY_FOR_CLAIM")
               .map((task: any) =>
-                this._claimTask({ id: task.id, title: task.title })
+                sleep(getRandomInt(500, 8000)).then(() => {
+                  this._claimTask({ id: task.id, title: task.title });
+                })
               )
           );
         }
@@ -638,7 +645,7 @@ export default class BlumBot {
     } else {
       log("danger", `[${this.username}]`, "Failed to run task");
     }
-    await sleep(60 * 1000 * 60 * 4);
+    await sleep(60 * 1000 * 60 * 8);
     return await this.runTask();
   };
 
