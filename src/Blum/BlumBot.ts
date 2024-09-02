@@ -505,8 +505,10 @@ export default class BlumBot {
     } else if (dailyReward?.message === "same day") {
       log(`[${this.username}]`, "Already claimed today");
     } else if (dailyReward?.message === "Bad request") {
-      if (i <= 5) return await this.runDailyReward(i);
-
+      if (i <= 5) {
+        await sleep(getRandomInt(500, 1500));
+        return await this.runDailyReward(i);
+      }
       log(`[${this.username}]`, "Already claimed today");
     } else {
       log("warning", `[${this.username}]`, "Daily reward not ready");
