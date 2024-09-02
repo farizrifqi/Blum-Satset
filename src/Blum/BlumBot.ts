@@ -204,7 +204,7 @@ export default class BlumBot {
     }
   };
   private _startGame = async () => {
-    await sleep(getRandomInt(500, 9500));
+    await sleep(getRandomInt(500, 8500));
     log("info", `[${this.username}]`, "Start game");
     let response: any = undefined;
     try {
@@ -221,7 +221,13 @@ export default class BlumBot {
       if (error.response?.data) {
         if (this._isTokenValid(error?.response?.data?.message)) {
           await this._errorHandler("", true);
-          return this._startGame();
+          return await this._startGame();
+        }
+        if (error?.response?.data?.message) {
+          if (error?.response?.data?.message == "cannot start game") {
+            await sleep(getRandomInt(500, 3000));
+            return await this._startGame();
+          }
         }
         await this._errorHandler(
           error?.response?.data?.message ?? error.response?.data,
@@ -378,7 +384,7 @@ export default class BlumBot {
     if (isRefresh) {
       await this._refreshToken();
     } else {
-      // log("warning", `[${this.username}]`, "");
+      log("warning", `[${this.username}]`, errorData.toString());
     }
     return;
   };
@@ -554,7 +560,7 @@ export default class BlumBot {
   runGame = async (i = 0) => {
     if (i > 0) {
       const gameResult = await this._startGame();
-      await sleep(30 * 1000);
+      await sleep(getRandomInt(500, 7500));
       if (gameResult?.gameId) {
         log(
           "success",
