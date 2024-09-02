@@ -575,6 +575,7 @@ export default class BlumBot {
         await sleep(1000 * 60 * 5);
       }
     }
+    await sleep(1000 * 60 * 60 * 8 + 1000 * 60 * 5);
     return await this.runGame();
   };
   runFarming = async () => {
