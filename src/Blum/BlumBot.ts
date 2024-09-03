@@ -561,7 +561,6 @@ export default class BlumBot {
   runGame = async (i = 0) => {
     if (i > 0) {
       await sleep(getRandomInt(5000, 60 * 1000));
-
       const gameResult = await this._startGame();
       if (gameResult?.gameId) {
         log(
@@ -649,7 +648,7 @@ export default class BlumBot {
               })
             )
         );
-        sleep(getRandomInt(500, 3000));
+        await sleep(getRandomInt(500, 3000));
         // Re check task
         tasks = await this.getTask(print);
         if (
