@@ -385,7 +385,7 @@ export default class BlumBot {
     if (isRefresh) {
       await this._refreshToken();
     } else {
-      log("warning", `[${this.username}]`, errorData.toString());
+      // log("warning", `[${this.username}]`, errorData.toString());
     }
     return;
   };
@@ -560,8 +560,9 @@ export default class BlumBot {
   };
   runGame = async (i = 0) => {
     if (i > 0) {
+      await sleep(getRandomInt(5000, 60 * 1000));
+
       const gameResult = await this._startGame();
-      await sleep(getRandomInt(500, 7500));
       if (gameResult?.gameId) {
         log(
           "success",
@@ -609,7 +610,7 @@ export default class BlumBot {
             balance.availableBalance
           );
           if (balance.farming.endTime - balance.timestamp > 1000 * 60 * 30) {
-            await sleep(60 * 1000 * 60 * 4 + 1000 * 60 * 5);
+            await sleep(60 * 1000 * 60 * 8 + 1000 * 60 * 5);
           } else {
             await sleep(
               balance.farming.endTime - balance.timestamp + 1000 * 60 * 5
