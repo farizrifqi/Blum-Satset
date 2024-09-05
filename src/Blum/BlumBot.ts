@@ -1,5 +1,10 @@
 import axios, { RawAxiosRequestHeaders } from "axios";
-import { BLUM_GAME_DOMAIN, BLUM_GATEWAY, TRIBE } from "../const";
+import {
+  BLUM_GAME_DOMAIN,
+  BLUM_GATEWAY,
+  BLUM_USER_DOMAIN,
+  TRIBE,
+} from "../const";
 import { log } from "../log";
 import { getRandomInt, sleep } from "./utils";
 
@@ -42,7 +47,7 @@ export default class BlumBot {
       if (error.response?.data) {
         if (this._isTokenValid(error?.response?.data?.message)) {
           await this._errorHandler("", true);
-          return this._getTask();
+          return await this._getTask();
         }
         await this._errorHandler(
           error?.response?.data?.message ?? error.response?.data,
@@ -103,7 +108,7 @@ export default class BlumBot {
         }
         if (this._isTokenValid(error?.response?.data?.message)) {
           await this._errorHandler("", true);
-          return this._claimFarming();
+          return await this._claimFarming();
         }
         await this._errorHandler(
           error?.response?.data?.message ?? error.response?.data,
@@ -132,7 +137,7 @@ export default class BlumBot {
       if (error.response?.data) {
         if (this._isTokenValid(error?.response?.data?.message)) {
           await this._errorHandler("", true);
-          return this._startFarming();
+          return await this._startFarming();
         }
         await this._errorHandler(
           error?.response?.data?.message ?? error.response?.data,
@@ -161,7 +166,7 @@ export default class BlumBot {
       if (error.response?.data) {
         if (this._isTokenValid(error?.response?.data?.message)) {
           await this._errorHandler("", true);
-          return this._dailyReward();
+          return await this._dailyReward();
         }
         await this._errorHandler(
           error?.response?.data?.message ?? error.response?.data,
@@ -191,7 +196,7 @@ export default class BlumBot {
       if (error.response?.data) {
         if (this._isTokenValid(error?.response?.data?.message)) {
           await this._errorHandler("", true);
-          return this._startTask({ id, title });
+          return await this._startTask({ id, title });
         }
         await this._errorHandler(
           error?.response?.data?.message ?? error.response?.data,
@@ -263,11 +268,11 @@ export default class BlumBot {
           "game session not finished"
         ) {
           await sleep(30000);
-          return this._claimGame(gameId);
+          return await this._claimGame(gameId);
         }
         if (this._isTokenValid(error?.response?.data?.message)) {
           await this._errorHandler("", true);
-          return this._claimGame(gameId);
+          return await this._claimGame(gameId);
         }
         await this._errorHandler(
           error?.response?.data?.message ?? error.response?.data,
@@ -312,7 +317,7 @@ export default class BlumBot {
   };
   private _refreshToken = async (tries: number = 1) => {
     await sleep(getRandomInt(500, 2000));
-    if (tries > 3) {
+    if (tries > 5) {
       log("danger", "Failed to refresh token");
       return false;
     }
@@ -322,7 +327,7 @@ export default class BlumBot {
     let response: any = undefined;
     try {
       const request = await axios.post(
-        BLUM_GATEWAY + "/v1/auth/provider/PROVIDER_TELEGRAM_MINI_APP",
+        BLUM_USER_DOMAIN + "/api/v1/auth/provider/PROVIDER_TELEGRAM_MINI_APP",
         { query: this.query },
         {
           headers: {
@@ -343,13 +348,9 @@ export default class BlumBot {
       }
       return;
     } catch (error: any) {
-      // log(
-      //   "danger",
-      //   `[${this.username}]`,
-      //   "Failed refresh token - engine error"
-      // );
+      log("danger", `[${this.username}]`, error);
     }
-    return this._refreshToken(tries + 1);
+    return await this._refreshToken(tries + 1);
   };
   private _getUserInfo = async () => {
     let response: any = undefined;
@@ -363,7 +364,7 @@ export default class BlumBot {
       if (error.response?.data) {
         if (this._isTokenValid(error?.response?.data?.message)) {
           await this._errorHandler("", true);
-          return this._getUserInfo();
+          return await this._getUserInfo();
         }
         await this._errorHandler(
           error?.response?.data?.message ?? error.response?.data,
@@ -428,7 +429,7 @@ export default class BlumBot {
       if (error.response?.data) {
         if (this._isTokenValid(error?.response?.data?.message)) {
           await this._errorHandler("", true);
-          return this._getFriendsBalance();
+          return await this._getFriendsBalance();
         }
         await this._errorHandler(
           error?.response?.data?.message ?? error.response?.data,
@@ -457,7 +458,7 @@ export default class BlumBot {
       if (error.response?.data) {
         if (this._isTokenValid(error?.response?.data?.message)) {
           await this._errorHandler("", true);
-          return this._claimFriendsBalance();
+          return await this._claimFriendsBalance();
         }
         await this._errorHandler(
           error?.response?.data?.message ?? error.response?.data,
@@ -575,7 +576,8 @@ export default class BlumBot {
     } else {
       const balance = await this._getBalance();
       if (balance) {
-        if (balance.playPasses > 0) return this.runGame(balance.playPasses);
+        if (balance.playPasses > 0)
+          return await this.runGame(balance.playPasses);
         log(`[${this.username}]`, "No game passes");
       } else {
         log("info", `[${this.username}]`, "Failed to get balance");
