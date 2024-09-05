@@ -253,7 +253,7 @@ export default class BlumBot {
     try {
       const request = await axios.post(
         BLUM_GAME_DOMAIN + "/api/v1/game/claim",
-        { gameId, points: getRandomInt(256, 278) },
+        { gameId, points: Math.floor(Math.random() * (270 - 160 + 1)) + 160 },
         {
           headers: this._getHeaders(),
         }
