@@ -262,7 +262,7 @@ export default class BlumBot {
           error?.response?.data?.message.toLowerCase() ==
           "game session not finished"
         ) {
-          await sleep(10000);
+          await sleep(30000);
           return this._claimGame(gameId);
         }
         if (this._isTokenValid(error?.response?.data?.message)) {
