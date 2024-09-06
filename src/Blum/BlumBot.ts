@@ -511,10 +511,10 @@ export default class BlumBot {
       await sleep(getRandomInt(500, 2000));
       if (!this.token) await this._init();
       Promise.all([
-        // this.runDailyReward(),
-        // this.runFarming(),
-        // this.runGame(),
-        // this.runTask(),
+        this.runDailyReward(),
+        this.runFarming(),
+        this.runGame(),
+        this.runTask(),
         this.runFriendsBalance(),
       ]);
       // await sleep(60 * 1000 * 8 + 60 * 1000 * 5);
