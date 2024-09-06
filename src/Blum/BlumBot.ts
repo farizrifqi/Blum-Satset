@@ -425,9 +425,12 @@ export default class BlumBot {
     log("info", `[${this.username}]`, "[FRIENDS]", "Checking friends balance");
     let response: any = undefined;
     try {
-      const request = await axios.get(BLUM_GATEWAY + "/v1/friends/balance", {
-        headers: this._getHeaders(),
-      });
+      const request = await axios.get(
+        BLUM_USER_DOMAIN + "/api/v1/friends/balance",
+        {
+          headers: this._getHeaders(),
+        }
+      );
       response = request.data;
       return response;
     } catch (error: any) {
@@ -508,10 +511,10 @@ export default class BlumBot {
       await sleep(getRandomInt(500, 2000));
       if (!this.token) await this._init();
       Promise.all([
-        this.runDailyReward(),
-        this.runFarming(),
-        this.runGame(),
-        this.runTask(),
+        // this.runDailyReward(),
+        // this.runFarming(),
+        // this.runGame(),
+        // this.runTask(),
         this.runFriendsBalance(),
       ]);
       // await sleep(60 * 1000 * 8 + 60 * 1000 * 5);
@@ -550,8 +553,11 @@ export default class BlumBot {
             "success",
             `[${this.username}]`,
             "Claimed friends balance",
-            `${friendsbalance.amountForClaim} points`
+            `${friendsbalance.amountForClaim} points`,
+            `(${friendsbalance.usedInvitation} friends)`
           );
+          await sleep(friendsbalance.canClaimAt - new Date().getTime() + 15000);
+          return await this.runFriendsBalance();
         } else {
           log("danger", `[${this.username}]`, "Failed claim friends balance");
         }
