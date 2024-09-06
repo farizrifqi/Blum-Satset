@@ -638,23 +638,21 @@ export default class BlumBot {
     log(`[${this.username}]`, "[FARMING]");
     const balance = await this._getBalance();
     if (balance) {
-      if (!balance.farming?.startTime) {
-        await sleep(1000 * 30);
-        await this._claimFarming();
+      if (balance.farming.canClaim) {
+        await sleep(1000 * 15);
+        await this._claimFarming(balance.farming.balance);
         await sleep(1000 * 30);
         await this._startFarming();
+        const nBalance = await this._getBalance();
+        await sleep(
+          nBalance.farming.endTime - new Date().getTime() + 1000 * 60 * 5
+        );
       } else {
-        if (new Date().getTime() > balance.farming.endTime) {
-          await sleep(1000 * 15);
-          await this._claimFarming(balance.farming.balance);
-          await sleep(1000 * 30);
-          await this._startFarming();
-        } else {
-          if (balance.farming.endTime - balance.startTime > 0) {
-            await sleep(
-              balance.farming.endTime - balance.startTime + 1000 * 60 * 5
-            );
-          }
+        if (new Date().getTime() - balance.farming.endTime <= 0) {
+          await sleep(
+            (new Date().getTime() - balance.farming.endTime + 1000 * 60 * 5) *
+              -1
+          );
         }
       }
     } else {
