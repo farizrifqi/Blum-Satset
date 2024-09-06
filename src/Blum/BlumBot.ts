@@ -421,8 +421,15 @@ export default class BlumBot {
     if (msg.toLowerCase().includes("invalid jwt token")) return true;
     return false;
   };
-  private _getFriendsBalance = async () => {
-    log("info", `[${this.username}]`, "[FRIENDS]", "Checking friends balance");
+  private _getFriendsBalance = async (showLog = true) => {
+    if (showLog) {
+      log(
+        "info",
+        `[${this.username}]`,
+        "[FRIENDS]",
+        "Checking friends balance"
+      );
+    }
     let response: any = undefined;
     try {
       const request = await axios.get(
@@ -437,7 +444,7 @@ export default class BlumBot {
       if (error.response?.data) {
         if (this._isTokenValid(error?.response?.data?.message)) {
           await this._errorHandler("", true);
-          return await this._getFriendsBalance();
+          return await this._getFriendsBalance(false);
         }
         await this._errorHandler(
           error?.response?.data?.message ?? error.response?.data,
@@ -454,7 +461,7 @@ export default class BlumBot {
     let response: any = undefined;
     try {
       const request = await axios.post(
-        BLUM_GATEWAY + "/v1/friends/claim",
+        BLUM_USER_DOMAIN + "/api/v1/friends/claim",
         {},
         {
           headers: this._getHeaders(),
@@ -481,10 +488,9 @@ export default class BlumBot {
   getUserInfo = async () => {
     return await this._getUserInfo();
   };
-  getTask = async (print: Boolean = false) => {
+  getTaskOld = async (print: Boolean = false) => {
     const tasks = await this._getTask();
     if (!tasks) return [];
-
     const subtasks = tasks.flatMap((task: any) => task.tasks);
     if (!print) return subtasks;
     console.table(
@@ -497,6 +503,30 @@ export default class BlumBot {
       }))
     );
     return subtasks;
+  };
+  getTask = async (print: Boolean = false) => {
+    const tasks = await this._getTask();
+    let allTask: any = [];
+    if (!tasks) return allTask;
+    allTask = [...allTask, ...tasks.flatMap((task: any) => task.tasks)];
+    if (tasks[0]?.subSections) {
+      tasks[0]?.subSections.forEach((subSection: any) => {
+        subSection.tasks.forEach((task: any) => {
+          allTask.push(task);
+        });
+      });
+    }
+    if (!print) return allTask;
+    console.table(
+      allTask.map((task: any) => ({
+        // id: task.id,
+        title: task.title,
+        // kind: task.kind,
+        status: task.status,
+        type: task.type,
+      }))
+    );
+    return allTask;
   };
   getBalance = async (print = true) => {
     const balance = await this._getBalance();
@@ -556,7 +586,13 @@ export default class BlumBot {
             `${friendsbalance.amountForClaim} points`,
             `(${friendsbalance.usedInvitation} friends)`
           );
-          await sleep(friendsbalance.canClaimAt - new Date().getTime() + 15000);
+          const friendsbalanceNew = await this._getFriendsBalance(false);
+          if (friendsbalanceNew?.canClaimAt) {
+            await sleep(
+              friendsbalance.canClaimAt - new Date().getTime() + 15000
+            );
+          }
+          await sleep(60 * 1000 * 60 * 8 + 15000);
           return await this.runFriendsBalance();
         } else {
           log("danger", `[${this.username}]`, "Failed claim friends balance");
@@ -610,7 +646,7 @@ export default class BlumBot {
       } else {
         if (new Date().getTime() > balance.farming.endTime) {
           await sleep(1000 * 15);
-          await this._claimFarming(balance.faring.balance);
+          await this._claimFarming(balance.farming.balance);
           await sleep(1000 * 30);
           await this._startFarming();
         } else {
