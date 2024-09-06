@@ -78,7 +78,7 @@ export default class BlumBot {
       return undefined;
     }
   };
-  private _claimFarming = async () => {
+  private _claimFarming = async (points = -1) => {
     log("info", `[${this.username}]`, "Claim farming");
     let response: any = undefined;
     try {
@@ -90,7 +90,12 @@ export default class BlumBot {
         }
       );
       response = request.data;
-      log("success", `[${this.username}]`, "Farming claimed");
+      log(
+        "success",
+        `[${this.username}]`,
+        "Farming claimed",
+        points < 0 ? 0 : points
+      );
       return response;
     } catch (error: any) {
       if (error.response?.data) {
@@ -99,7 +104,7 @@ export default class BlumBot {
           "it's too early to claim"
         ) {
           await sleep(1000 * 15000);
-          return await this._claimFarming();
+          return await this._claimFarming(points);
         }
         if (
           error?.response?.data?.message?.toLowerCase() == "need to start farm"
@@ -108,7 +113,7 @@ export default class BlumBot {
         }
         if (this._isTokenValid(error?.response?.data?.message)) {
           await this._errorHandler("", true);
-          return await this._claimFarming();
+          return await this._claimFarming(points);
         }
         await this._errorHandler(
           error?.response?.data?.message ?? error.response?.data,
@@ -597,24 +602,15 @@ export default class BlumBot {
         await sleep(1000 * 30);
         await this._startFarming();
       } else {
-        if (balance.farming?.endTime <= balance.timestamp) {
-          await sleep(1000 * 30);
-
-          await this._claimFarming();
+        if (new Date().getTime() > balance.farming.endTime) {
+          await sleep(1000 * 15);
+          await this._claimFarming(balance.faring.balance);
           await sleep(1000 * 30);
           await this._startFarming();
         } else {
-          log(
-            "success",
-            `[${this.username}]`,
-            "Balance",
-            balance.availableBalance
-          );
-          if (balance.farming.endTime - balance.timestamp > 1000 * 60 * 30) {
-            await sleep(60 * 1000 * 60 * 8 + 1000 * 60 * 5);
-          } else {
+          if (balance.farming.endTime - balance.startTime > 0) {
             await sleep(
-              balance.farming.endTime - balance.timestamp + 1000 * 60 * 5
+              balance.farming.endTime - balance.startTime + 1000 * 60 * 5
             );
           }
         }
