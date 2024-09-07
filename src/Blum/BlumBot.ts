@@ -635,31 +635,35 @@ export default class BlumBot {
     return await this.runGame();
   };
   runFarming = async () => {
-    log(`[${this.username}]`, "[FARMING]");
-    const balance = await this._getBalance();
-    if (balance) {
-      if (balance.farming.canClaim) {
-        await sleep(1000 * 15);
-        await this._claimFarming(balance.farming.balance);
-        await sleep(1000 * 30);
-        await this._startFarming();
-        const nBalance = await this._getBalance();
-        await sleep(
-          nBalance.farming.endTime - new Date().getTime() + 1000 * 60 * 5
-        );
-      } else {
-        if (new Date().getTime() - balance.farming.endTime <= 0) {
+    try {
+      log(`[${this.username}]`, "[FARMING]");
+      const balance = await this._getBalance();
+      if (balance) {
+        if (balance.farming.canClaim) {
+          await sleep(1000 * 15);
+          await this._claimFarming(balance.farming.balance);
+          await sleep(1000 * 30);
+          await this._startFarming();
+          const nBalance = await this._getBalance();
           await sleep(
-            (new Date().getTime() - balance.farming.endTime + 1000 * 60 * 5) *
-              -1
+            nBalance.farming.endTime - new Date().getTime() + 1000 * 60 * 5
           );
+        } else {
+          if (new Date().getTime() - balance.farming.endTime <= 0) {
+            await sleep(
+              (new Date().getTime() - balance.farming.endTime + 1000 * 60 * 5) *
+                -1
+            );
+          }
         }
+      } else {
+        log("info", `[${this.username}]`, "Failed to get balance");
+        await sleep(60 * 1000 * 60 * 1);
       }
-    } else {
-      log("info", `[${this.username}]`, "Failed to get balance");
-      await sleep(60 * 1000 * 60 * 1);
+      return await this.runFarming();
+    } catch (err) {
+      console.log(err);
     }
-    return await this.runFarming();
   };
   runTask = async (print: Boolean = false) => {
     let tasks = await this.getTask(print);
