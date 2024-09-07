@@ -89,7 +89,7 @@ export default class BlumBot {
         }
       );
 
-      response = request.data?.points;
+      response = request.data?.points.find((p: any) => p.name == "Blum points");
       return response;
     } catch (error: any) {
       if (error.response?.data?.message) {
@@ -664,8 +664,8 @@ export default class BlumBot {
     try {
       log(`[${this.username}]`, "[FARMING]");
       const balance = await this._getPoints();
-      if (balance) {
-        if (balance?.timestamp >= balance.farming.endTime) {
+      if (balance && balance?.farming) {
+        if (new Date().getTime() >= balance.farming.endTime) {
           await sleep(1000 * 15);
           await this._claimFarming(balance.farming.balance);
           await sleep(1000 * 30);
