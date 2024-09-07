@@ -75,7 +75,7 @@ export default class BlumBot {
       if (error.response?.data?.message) {
         log("danger", `[${this.username}]`, "Failed getBalance");
       }
-      return undefined;
+      return false;
     }
   };
   private _claimFarming = async (points = -1) => {
@@ -639,7 +639,7 @@ export default class BlumBot {
       log(`[${this.username}]`, "[FARMING]");
       const balance = await this._getBalance();
       if (balance) {
-        if (balance.farming.canClaim) {
+        if (balance?.farming?.canClaim) {
           await sleep(1000 * 15);
           await this._claimFarming(balance.farming.balance);
           await sleep(1000 * 30);
