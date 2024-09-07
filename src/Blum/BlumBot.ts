@@ -104,7 +104,6 @@ export default class BlumBot {
       `[${this.username}]`,
       "Claim farming currently disabled because an update. PM developer."
     );
-    return;
     log("info", `[${this.username}]`, "Claim farming");
     let response: any = undefined;
     try {
@@ -671,7 +670,7 @@ export default class BlumBot {
           await sleep(1000 * 30);
           await this._startFarming();
           const nBalance = await this._getPoints();
-          if (nBalance) {
+          if (nBalance && nBalance?.farming) {
             await sleep(
               nBalance.farming.endTime - new Date().getTime() + 1000 * 60 * 5
             );
