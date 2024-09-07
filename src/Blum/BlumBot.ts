@@ -639,7 +639,7 @@ export default class BlumBot {
       log(`[${this.username}]`, "[FARMING]");
       const balance = await this._getBalance();
       if (balance) {
-        if (balance?.farming?.canClaim) {
+        if (balance?.timestamp >= balance.farming.endTime) {
           await sleep(1000 * 15);
           await this._claimFarming(balance.farming.balance);
           await sleep(1000 * 30);
