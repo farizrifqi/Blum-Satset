@@ -3,6 +3,7 @@ import {
   BLUM_GAME_DOMAIN,
   BLUM_GATEWAY,
   BLUM_USER_DOMAIN,
+  BLUM_WALLET_DOMAIN,
   TRIBE,
 } from "../const";
 import { log } from "../log";
@@ -78,7 +79,32 @@ export default class BlumBot {
       return false;
     }
   };
+  private _getPoints = async () => {
+    let response: any = undefined;
+    try {
+      const request = await axios.get(
+        BLUM_WALLET_DOMAIN + "/api/v1/wallet/my/points/balance",
+        {
+          headers: this._getHeaders(),
+        }
+      );
+
+      response = request.data?.points;
+      return response;
+    } catch (error: any) {
+      if (error.response?.data?.message) {
+        log("danger", `[${this.username}]`, "Failed getBalance");
+      }
+      return false;
+    }
+  };
   private _claimFarming = async (points = -1) => {
+    log(
+      "danger",
+      `[${this.username}]`,
+      "Claim farming currently disabled because an update. PM developer."
+    );
+    return;
     log("info", `[${this.username}]`, "Claim farming");
     let response: any = undefined;
     try {
@@ -637,14 +663,14 @@ export default class BlumBot {
   runFarming = async () => {
     try {
       log(`[${this.username}]`, "[FARMING]");
-      const balance = await this._getBalance();
+      const balance = await this._getPoints();
       if (balance) {
         if (balance?.timestamp >= balance.farming.endTime) {
           await sleep(1000 * 15);
           await this._claimFarming(balance.farming.balance);
           await sleep(1000 * 30);
           await this._startFarming();
-          const nBalance = await this._getBalance();
+          const nBalance = await this._getPoints();
           if (nBalance) {
             await sleep(
               nBalance.farming.endTime - new Date().getTime() + 1000 * 60 * 5
