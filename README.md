@@ -13,6 +13,10 @@ Bot to automate any task on [Blum](https://t.me/BlumCryptoBot).
 3. Put the telegram app data each line
 4. Run `npx ts-node index.ts` or `bun run index.ts`
 
+## Referral
+
+To set your referral, just edit the `src/Blum/Blum.ts` and edit the const `ref_XXXXXXXXX`
+
 ### Automaton
 
 - [x] Auto Farming

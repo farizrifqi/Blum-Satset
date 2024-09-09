@@ -8,7 +8,7 @@ import {
 } from "../const";
 import { log } from "../log";
 import { getRandomInt, sleep } from "./utils";
-
+const reff = "ref_qxp592HMzs";
 export default class BlumBot {
   private token: string | undefined = undefined;
   private query: string;
@@ -358,7 +358,10 @@ export default class BlumBot {
     try {
       const request = await axios.post(
         BLUM_USER_DOMAIN + "/api/v1/auth/provider/PROVIDER_TELEGRAM_MINI_APP",
-        { query: this.query },
+        {
+          query: `${this.query}&start_param=${reff}`,
+          referralToken: reff.split("_")[1],
+        },
         {
           headers: {
             accept: "application/json, text/plain, */*",
@@ -373,6 +376,13 @@ export default class BlumBot {
       response = request.data;
       if (!response?.token?.refresh) throw new Error("");
       this.token = response?.token?.refresh;
+      if (response?.justCreated) {
+        log(
+          "success",
+          `[${this.username}]`,
+          `Just created account, using refferal: ${reff}`
+        );
+      }
       if (this.username) {
         log("success", `[${this.username}]`, "Token refreshed");
       }
