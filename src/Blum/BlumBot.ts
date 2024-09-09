@@ -99,11 +99,11 @@ export default class BlumBot {
     }
   };
   private _claimFarming = async (points = -1) => {
-    log(
-      "danger",
-      `[${this.username}]`,
-      "Claim farming currently disabled because an update. PM developer."
-    );
+    // log(
+    //   "danger",
+    //   `[${this.username}]`,
+    //   "Claim farming currently disabled because an update. PM developer."
+    // );
     log("info", `[${this.username}]`, "Claim farming");
     let response: any = undefined;
     try {
