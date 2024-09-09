@@ -15,15 +15,6 @@ IF %ERRORLEVEL% NEQ 0 (
 REM Check if node_modules folder exists
 IF EXIST "node_modules" (
     echo node_modules directory exists.
-
-    @REM REM Check if dependencies are up-to-date
-    @REM npm ls --depth=0 >nul 2>&1
-    @REM IF %ERRORLEVEL% EQU 0 (
-    @REM     echo Dependencies are already installed and up-to-date.
-    @REM ) ELSE (
-    @REM     echo Dependencies are outdated or missing. Running npm install...
-    @REM     npm install
-    @REM )
 ) ELSE (
     echo node_modules directory does not exist. Running npm install...
     npm install

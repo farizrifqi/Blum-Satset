@@ -1,5 +1,6 @@
 import axios from "axios";
 import fs from "node:fs";
+import { sleep } from "./Blum/utils";
 
 export const checkVersion = async () => {
   try {
@@ -12,6 +13,7 @@ export const checkVersion = async () => {
     console.log("Version outdated. Please run: git pull");
     console.log('OR. Run with  "--nocheckv"');
     console.log("Visit: https://github.com/farizrifqi/Blum-Satset");
+    await sleep(40000);
     process.exit();
   }
 };
