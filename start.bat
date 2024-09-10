@@ -1,4 +1,6 @@
 @echo off
+REM Running update
+git pull
 
 REM Check if npm is installed and in the PATH
 where npm >nul 2>&1
