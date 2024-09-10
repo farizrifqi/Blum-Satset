@@ -774,7 +774,7 @@ export default class BlumBot {
         ) {
           log("info", `[${this.username}]`, "Verifying task...");
           const keywords = {
-            "38f6dd88-57bd-4b42-8712-286a06dac0a0": "",
+            "38f6dd88-57bd-4b42-8712-286a06dac0a0": "VALUE",
           };
           await Promise.all(
             tasks
@@ -786,11 +786,13 @@ export default class BlumBot {
               .map((task: any) =>
                 sleep(getRandomInt(1000, 5000)).then(() => {
                   if (keywords[task.id]) {
-                    this._verifyTask({
-                      id: task.id,
-                      title: task.title,
-                      keyword: keywords[task.id],
-                    });
+                    if (keywords[task.id] != "") {
+                      this._verifyTask({
+                        id: task.id,
+                        title: task.title,
+                        keyword: keywords[task.id],
+                      });
+                    }
                   }
                 })
               )
