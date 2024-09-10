@@ -345,6 +345,41 @@ export default class BlumBot {
       return undefined;
     }
   };
+  private _verifyTask = async ({ id, title, keyword }: any) => {
+    log("info", `[${this.username}]`, "[TASK]", title, "VERIFYING");
+    let response: any = undefined;
+    try {
+      const request = await axios.post(
+        BLUM_GAME_DOMAIN + "/api/v1/tasks/" + id + "/validate",
+        { keyword },
+        {
+          headers: this._getHeaders(),
+        }
+      );
+      response = request.data;
+      if (response.title) {
+        log("success", `[${this.username}]`, "[TASK]", title, "Verified");
+      } else {
+        log("danger", `[${this.username}]`, "[TASK]", title, "Verify failed.");
+      }
+
+      return response;
+    } catch (error: any) {
+      if (error.response?.data) {
+        if (this._isTokenValid(error?.response?.data?.message)) {
+          await this._errorHandler("", true);
+          return await this._claimTask({ id, title });
+        }
+        await this._errorHandler(
+          error?.response?.data?.message ?? error.response?.data,
+          false
+        );
+      } else {
+        log("danger", `[${this.username}]`, "Failed to verify task", title);
+      }
+      return undefined;
+    }
+  };
   private _refreshToken = async (tries: number = 1) => {
     await sleep(getRandomInt(500, 2000));
     if (tries > 5) {
@@ -731,6 +766,36 @@ export default class BlumBot {
               })
             )
         );
+        await sleep(getRandomInt(500, 3000));
+        tasks = await this.getTask(print);
+        if (
+          tasks.filter((task: any) => task.status == "READY_FOR_VERIFY")
+            .length > 0
+        ) {
+          log("info", `[${this.username}]`, "Verifying task...");
+          const keywords = {
+            "38f6dd88-57bd-4b42-8712-286a06dac0a0": "",
+          };
+          await Promise.all(
+            tasks
+              .filter(
+                (task: any) =>
+                  task.status == "READY_FOR_VERIFY" &&
+                  task.validationType == "KEYWORD"
+              )
+              .map((task: any) =>
+                sleep(getRandomInt(1000, 5000)).then(() => {
+                  if (keywords[task.id]) {
+                    this._verifyTask({
+                      id: task.id,
+                      title: task.title,
+                      keyword: keywords[task.id],
+                    });
+                  }
+                })
+              )
+          );
+        }
         await sleep(getRandomInt(500, 3000));
         // Re check task
         tasks = await this.getTask(print);
