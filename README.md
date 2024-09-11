@@ -26,8 +26,9 @@ To set your referral, just edit the `referral.txt` and edit the const `ref_XXXXX
 
 ### Automaton
 
+- [x] Auto Register with Referral
 - [x] Auto Farming
 - [x] Auto Play Games
 - [x] Auto Task
 - [x] Auto Claim Daily Rewards
-- [ ] Auto Claim Friends Balance
+- [x] Auto Claim Friends Balance
