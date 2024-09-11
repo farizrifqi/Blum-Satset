@@ -7,8 +7,8 @@ import {
   TRIBE,
 } from "../const";
 import { log } from "../log";
-import { getRandomInt, sleep } from "./utils";
-const reff = "ref_qxp592HMzs";
+import { getRandomInt, loadReferral, sleep } from "./utils";
+const reff = loadReferral();
 export default class BlumBot {
   private token: string | undefined = undefined;
   private query: string;
@@ -392,7 +392,7 @@ export default class BlumBot {
     let response: any = undefined;
     try {
       let data: any = {
-        query: `${this.query}${reff ? `&start_param=${reff}` : ""}`,
+        query: `${this.query}${reff ? `` : ""}`,
       };
       if ((reff as any) != "") {
         data.referralToken = (reff as string).split("_")[1];

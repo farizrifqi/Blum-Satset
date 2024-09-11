@@ -15,7 +15,7 @@ Bot to automate any task on [Blum](https://t.me/BlumCryptoBot).
 
 ## Referral
 
-To set your referral, just edit the `src/Blum/Blum.ts` and edit the const `ref_XXXXXXXXX`
+To set your referral, just edit the `referral.txt` and edit the const `ref_XXXXXXXXX`
 
 ### Automaton
 
