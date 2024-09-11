@@ -8,6 +8,13 @@ Bot to automate any task on [Blum](https://t.me/BlumCryptoBot).
 
 ### Quickstart
 
+#### For Windows:
+
+Just run the **`start.bat`**
+It will automatically run update, installing depedencies, and run the bot.
+
+#### Other:
+
 1. Install `npm install`
 2. Create `query.txt`
 3. Put the telegram app data each line
