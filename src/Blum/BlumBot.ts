@@ -819,7 +819,7 @@ export default class BlumBot {
               this._startTask({ id: task.id, title: task.title })
             )
         );
-        await sleep(getRandomInt(500, 3000));
+        await sleep(getRandomInt(1000, 5000));
         tasks = await this.getTask(print);
         if (
           tasks.filter((task: any) => task.status == "READY_FOR_VERIFY")
@@ -852,7 +852,7 @@ export default class BlumBot {
               )
           );
         }
-        await sleep(getRandomInt(500, 3000));
+        await sleep(getRandomInt(1000, 5000));
         // Re check task
         tasks = await this.getTask(print);
         if (
