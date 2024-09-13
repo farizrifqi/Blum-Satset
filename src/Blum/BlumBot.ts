@@ -84,17 +84,17 @@ export default class BlumBot {
     let response: any = undefined;
     try {
       const request = await axios.get(
-        BLUM_WALLET_DOMAIN + "/api/v1/wallet/my/points/balance",
+        BLUM_GAME_DOMAIN + "/api/v1/user/balance",
         {
           headers: this._getHeaders(),
         }
       );
 
-      response = request.data?.points.find((p: any) => p.name == "Blum points");
+      response = request.data;
       return response;
     } catch (error: any) {
       if (error.response?.data?.message) {
-        log("danger", `[${this.username}]`, "Failed getBalance");
+        log("danger", `[${this.username}]`, "Failed getPoints");
       }
       return false;
     }
@@ -751,7 +751,7 @@ export default class BlumBot {
           return await this.runGame(balance.playPasses);
         log(`[${this.username}]`, "No game passes");
       } else {
-        log("info", `[${this.username}]`, "Failed to get balance");
+        log("info", `[${this.username}]`, "Failed to get game pass");
         await sleep(1000 * 60 * 5);
       }
     }
@@ -762,29 +762,37 @@ export default class BlumBot {
     try {
       log(`[${this.username}]`, "[FARMING]");
       const balance = await this._getPoints();
-      if (balance && balance?.farming) {
-        if (new Date().getTime() >= balance.farming.endTime) {
-          await sleep(1000 * 15);
-          await this._claimFarming(balance.farming.balance);
-          await sleep(1000 * 30);
-          await this._startFarming();
-          const nBalance = await this._getPoints();
-          if (nBalance && nBalance?.farming) {
-            await sleep(
-              nBalance.farming.endTime - new Date().getTime() + 1000 * 60 * 5
-            );
+      if (balance) {
+        if (balance.farming) {
+          if (new Date().getTime() >= balance.farming.endTime) {
+            await sleep(1000 * 15);
+            await this._claimFarming(balance.farming.balance);
+            await sleep(1000 * 30);
+            await this._startFarming();
+            const nBalance = await this._getPoints();
+            if (nBalance && nBalance?.farming) {
+              await sleep(
+                nBalance.farming.endTime - new Date().getTime() + 1000 * 60 * 5
+              );
+            }
+            await sleep(1000 * 60 * 60 * 4);
+          } else {
+            if (new Date().getTime() - balance.farming.endTime <= 0) {
+              await sleep(
+                (new Date().getTime() -
+                  balance.farming.endTime +
+                  1000 * 60 * 5) *
+                  -1
+              );
+            }
           }
-          await sleep(1000 * 60 * 60 * 4);
         } else {
-          if (new Date().getTime() - balance.farming.endTime <= 0) {
-            await sleep(
-              (new Date().getTime() - balance.farming.endTime + 1000 * 60 * 5) *
-                -1
-            );
-          }
+          log(`[${this.username}]`, "Farming not started.");
+          await this._startFarming();
+          await sleep(60 * 1000 * 5);
         }
       } else {
-        log("info", `[${this.username}]`, "Failed to get balance");
+        log("info", `[${this.username}]`, "Failed to get balance (farming)");
         await sleep(60 * 1000 * 60 * 1);
       }
       return await this.runFarming();
