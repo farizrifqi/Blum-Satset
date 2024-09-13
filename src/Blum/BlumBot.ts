@@ -1,5 +1,6 @@
 import axios, { RawAxiosRequestHeaders } from "axios";
 import {
+  BLUM_EARN_DOMAIN,
   BLUM_GAME_DOMAIN,
   BLUM_GATEWAY,
   BLUM_USER_DOMAIN,
@@ -39,7 +40,7 @@ export default class BlumBot {
   private _getTask = async () => {
     let response: any = undefined;
     try {
-      const request = await axios.get(BLUM_GAME_DOMAIN + "/api/v1/tasks", {
+      const request = await axios.get(BLUM_EARN_DOMAIN + "/api/v1/tasks", {
         headers: this._getHeaders(),
       });
       response = request.data;
@@ -214,7 +215,7 @@ export default class BlumBot {
     let response: any = undefined;
     try {
       const request = await axios.post(
-        BLUM_GAME_DOMAIN + "/api/v1/tasks/" + id + "/start",
+        BLUM_EARN_DOMAIN + "/api/v1/tasks/" + id + "/start",
         {},
         {
           headers: this._getHeaders(),
@@ -319,7 +320,7 @@ export default class BlumBot {
     let response: any = undefined;
     try {
       const request = await axios.post(
-        BLUM_GAME_DOMAIN + "/api/v1/tasks/" + id + "/claim",
+        BLUM_EARN_DOMAIN + "/api/v1/tasks/" + id + "/claim",
         {},
         {
           headers: this._getHeaders(),
@@ -334,6 +335,37 @@ export default class BlumBot {
         if (this._isTokenValid(error?.response?.data?.message)) {
           await this._errorHandler("", true);
           return await this._claimTask({ id, title });
+        }
+        await this._errorHandler(
+          error?.response?.data?.message ?? error.response?.data,
+          false
+        );
+      } else {
+        log("danger", `[${this.username}]`, "Failed to claim task", title);
+      }
+      return undefined;
+    }
+  };
+  private _earnTask = async ({ id, title }: any) => {
+    log("info", `[${this.username}]`, "[TASK]", title, "CLAIMING");
+    let response: any = undefined;
+    try {
+      const request = await axios.post(
+        BLUM_EARN_DOMAIN + "/api/v1/tasks/" + id + "/start",
+        {},
+        {
+          headers: this._getHeaders(),
+        }
+      );
+      response = request.data;
+      log("success", `[${this.username}]`, "[TASK]", title, "Claimed");
+
+      return response;
+    } catch (error: any) {
+      if (error.response?.data) {
+        if (this._isTokenValid(error?.response?.data?.message)) {
+          await this._errorHandler("", true);
+          return await this._earnTask({ id, title });
         }
         await this._errorHandler(
           error?.response?.data?.message ?? error.response?.data,
@@ -519,6 +551,14 @@ export default class BlumBot {
           await this._errorHandler("", true);
           return await this._getFriendsBalance(false);
         }
+        if (error.response?.data?.message == "User not found") {
+          log(
+            "danger",
+            `[${this.username}]`,
+            "Failed to check friends balance. Probably Phone Number banned."
+          );
+          return undefined;
+        }
         await this._errorHandler(
           error?.response?.data?.message ?? error.response?.data,
           false
@@ -582,13 +622,24 @@ export default class BlumBot {
     let allTask: any = [];
     if (!tasks) return allTask;
     allTask = [...allTask, ...tasks.flatMap((task: any) => task.tasks)];
-    if (tasks[0]?.subSections) {
-      tasks[0]?.subSections.forEach((subSection: any) => {
-        subSection.tasks.forEach((task: any) => {
-          allTask.push(task);
+    tasks.forEach((task: any) => {
+      if (task?.subSections) {
+        task?.subSections.forEach((subSection: any) => {
+          subSection.tasks.forEach((task: any) => {
+            allTask.push(task);
+          });
         });
-      });
-    }
+      }
+      if (task?.tasks) {
+        task?.tasks.forEach((t: any) => {
+          if (t?.subTasks) {
+            t.subTasks.forEach((subTask: any) => {
+              allTask.push(subTask);
+            });
+          }
+        });
+      }
+    });
     if (!print) return allTask;
     console.table(
       allTask.map((task: any) => ({
@@ -757,13 +808,7 @@ export default class BlumBot {
                 task.status == "NOT_STARTED" && task.type != "PROGRESS_TARGET"
             )
             .map((task: any) =>
-              this._startTask({ id: task.id, title: task.title }).then((a) => {
-                if (a) {
-                  sleep(getRandomInt(500, 8000)).then(() => {
-                    this._claimTask({ id: task.id, title: task.title });
-                  });
-                }
-              })
+              this._startTask({ id: task.id, title: task.title })
             )
         );
         await sleep(getRandomInt(500, 3000));
@@ -775,6 +820,7 @@ export default class BlumBot {
           log("info", `[${this.username}]`, "Verifying task...");
           const keywords = {
             "38f6dd88-57bd-4b42-8712-286a06dac0a0": "VALUE",
+            "6af85c01-f68d-4311-b78a-9cf33ba": "GO GET",
           };
           await Promise.all(
             tasks
