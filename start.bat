@@ -2,8 +2,6 @@
 REM Running update repository
 git pull
 
-REM Running update / install required depedencies
-npm i
 REM Check if npm is installed and in the PATH
 where npm >nul 2>&1
 IF %ERRORLEVEL% NEQ 0 (
