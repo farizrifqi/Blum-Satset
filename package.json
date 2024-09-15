@@ -12,6 +12,10 @@
     "@colors/colors": "^1.6.0",
     "axios": "^1.7.5",
     "dotenv": "^16.4.5",
-    "fs": "^0.0.1-security"
+    "fs": "^0.0.1-security",
+    "prompts": "^2.4.2"
+  },
+  "devDependencies": {
+    "@types/prompts": "^2.4.9"
   }
 }

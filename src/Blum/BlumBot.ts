@@ -258,12 +258,12 @@ export default class BlumBot {
       if (error.response?.data) {
         if (this._isTokenValid(error?.response?.data?.message)) {
           await this._errorHandler("", true);
-          return await this._startGame();
+          return await this._startGame(i);
         }
         if (error?.response?.data?.message) {
           if (error?.response?.data?.message == "cannot start game") {
             await sleep(getRandomInt(500, 3000));
-            if (i > 5) return await this._startGame();
+            if (i > 5) return await this._startGame(i);
           }
         }
         await this._errorHandler(
@@ -660,25 +660,30 @@ export default class BlumBot {
       }
     }
   };
-  run = async () => {
+  run = async (safe = false) => {
     try {
       await sleep(getRandomInt(500, 2000));
       if (!this.token) await this._init();
-      Promise.all([
-        this.runDailyReward(),
-        this.runFarming(),
-        this.runGame(),
-        this.runTask(),
-        this.runFriendsBalance(),
+      await Promise.all([
+        this.runDailyReward(undefined, safe),
+        this.runFarming(safe),
+        this.runGame(undefined, safe),
+        this.runTask(undefined, safe),
+        this.runFriendsBalance(safe),
       ]);
-      // await sleep(60 * 1000 * 8 + 60 * 1000 * 5);
-      // return await this.run();
+      if (!safe) {
+        await sleep(60 * 1000 * 8 + 60 * 1000 * 5);
+        return await this.run();
+      }
     } catch (err) {
-      await sleep(getRandomInt(500, 2000) * getRandomInt(1, 15));
-      return await this.run();
+      if (!safe) {
+        await sleep(getRandomInt(500, 2000) * getRandomInt(1, 15));
+        return await this.run();
+      }
     }
   };
-  runDailyReward = async (i = 0) => {
+
+  runDailyReward = async (i = 0, safe = false) => {
     i++;
     const dailyReward = await this._dailyReward();
     if (dailyReward?.message === "OK") {
@@ -688,16 +693,18 @@ export default class BlumBot {
     } else if (dailyReward?.message === "Bad request") {
       if (i <= 5) {
         await sleep(getRandomInt(500, 1500));
-        return await this.runDailyReward(i);
+        return await this.runDailyReward(i, safe);
       }
       log(`[${this.username}]`, "Already claimed today");
     } else {
       log("warning", `[${this.username}]`, "Daily reward not ready");
     }
-    await sleep(60 * 1000 * 60 * 8 + 1000 * 60 * 5);
-    return await this.runDailyReward();
+    if (!safe) {
+      await sleep(60 * 1000 * 60 * 8 + 1000 * 60 * 5);
+      return await this.runDailyReward(0, safe);
+    }
   };
-  runFriendsBalance = async () => {
+  runFriendsBalance = async (safe = false) => {
     const friendsbalance = await this._getFriendsBalance();
     if (friendsbalance) {
       if (friendsbalance.canClaim) {
@@ -712,12 +719,16 @@ export default class BlumBot {
           );
           const friendsbalanceNew = await this._getFriendsBalance(false);
           if (friendsbalanceNew?.canClaimAt) {
-            await sleep(
-              friendsbalance.canClaimAt - new Date().getTime() + 15000
-            );
+            if (!safe) {
+              await sleep(friendsbalance.canClaimAt - new Date().getTime());
+            } else {
+              log(`[${this.username}]`, "Friends balance not ready.");
+            }
           }
-          await sleep(60 * 1000 * 60 * 8 + 15000);
-          return await this.runFriendsBalance();
+          if (!safe) {
+            await sleep(60 * 1000 * 60 * 8 + 15000);
+            return await this.runFriendsBalance(safe);
+          }
         } else {
           log("danger", `[${this.username}]`, "Failed claim friends balance");
         }
@@ -727,12 +738,18 @@ export default class BlumBot {
     } else {
       log("danger", `[${this.username}]`, "Failed check friends balance");
     }
-    await sleep(60 * 1000 * 60 * 8 + 1000 * 60 * 5);
-    return await this.runFriendsBalance();
+    if (!safe) {
+      await sleep(60 * 1000 * 60 * 8 + 1000 * 60 * 5);
+      return await this.runFriendsBalance(safe);
+    }
   };
-  runGame = async (i = 0) => {
+  runGame = async (i = 0, safe = false) => {
     if (i > 0) {
-      await sleep(getRandomInt(5000, 60 * 1000));
+      if (!safe) {
+        await sleep(getRandomInt(5000, 30 * 1000));
+      } else {
+        await sleep(getRandomInt(1000, 5 * 1000));
+      }
       const gameResult = await this._startGame();
       if (gameResult?.gameId) {
         log(
@@ -743,64 +760,73 @@ export default class BlumBot {
         );
         await this._claimGame(gameResult.gameId);
       }
-      if (i - 1 > 0) return await this.runGame(i - 1);
+      if (i - 1 > 0) return await this.runGame(i - 1, safe);
     } else {
       const balance = await this._getBalance();
       if (balance) {
-        if (balance.playPasses > 0)
-          return await this.runGame(balance.playPasses);
+        if (balance.playPasses > 0) {
+          return await this.runGame(balance.playPasses, safe);
+        }
         log(`[${this.username}]`, "No game passes");
       } else {
         log("info", `[${this.username}]`, "Failed to get game pass");
-        await sleep(1000 * 60 * 5);
+        if (!safe) await sleep(1000 * 60 * 5);
       }
     }
-    await sleep(1000 * 60 * 60 * 8 + 1000 * 60 * 5);
-    return await this.runGame();
+    if (!safe) {
+      await sleep(1000 * 60 * 60 * 8 + 1000 * 60 * 5);
+      return await this.runGame(0, safe);
+    }
   };
-  runFarming = async () => {
+  runFarming = async (safe = false) => {
     try {
       log(`[${this.username}]`, "[FARMING]");
       const balance = await this._getPoints();
       if (balance) {
         if (balance.farming) {
           if (new Date().getTime() >= balance.farming.endTime) {
-            await sleep(1000 * 15);
+            if (!safe) await sleep(1000 * 15);
             await this._claimFarming(balance.farming.balance);
-            await sleep(1000 * 30);
+            if (!safe) await sleep(1000 * 30);
             await this._startFarming();
             const nBalance = await this._getPoints();
             if (nBalance && nBalance?.farming) {
-              await sleep(
-                nBalance.farming.endTime - new Date().getTime() + 1000 * 60 * 5
-              );
+              if (!safe) {
+                await sleep(
+                  nBalance.farming.endTime -
+                    new Date().getTime() +
+                    1000 * 60 * 5
+                );
+              }
             }
-            await sleep(1000 * 60 * 60 * 4);
+            if (!safe) await sleep(1000 * 60 * 60 * 4);
           } else {
             if (new Date().getTime() - balance.farming.endTime <= 0) {
-              await sleep(
-                (new Date().getTime() -
-                  balance.farming.endTime +
-                  1000 * 60 * 5) *
-                  -1
-              );
+              if (!safe) {
+                await sleep(
+                  (new Date().getTime() -
+                    balance.farming.endTime +
+                    1000 * 60 * 5) *
+                    -1
+                );
+              }
             }
           }
         } else {
           log(`[${this.username}]`, "Farming not started.");
           await this._startFarming();
-          await sleep(60 * 1000 * 5);
+          if (!safe) await sleep(60 * 1000 * 5);
         }
       } else {
         log("info", `[${this.username}]`, "Failed to get balance (farming)");
-        await sleep(60 * 1000 * 60 * 1);
+        if (!safe) await sleep(60 * 1000 * 60 * 1);
       }
-      return await this.runFarming();
+      if (!safe) return await this.runFarming(safe);
     } catch (err) {
       console.log(err);
     }
   };
-  runTask = async (print: Boolean = false) => {
+  runTask = async (print: Boolean = false, safe = false) => {
     let tasks = await this.getTask(print);
     if (tasks) {
       if (
@@ -819,7 +845,7 @@ export default class BlumBot {
               this._startTask({ id: task.id, title: task.title })
             )
         );
-        await sleep(getRandomInt(1000, 5000));
+        if (!safe) await sleep(getRandomInt(1000, 5000));
         tasks = await this.getTask(print);
         if (
           tasks.filter((task: any) => task.status == "READY_FOR_VERIFY")
@@ -877,8 +903,10 @@ export default class BlumBot {
     } else {
       log("danger", `[${this.username}]`, "Failed to run task");
     }
-    await sleep(60 * 1000 * 60 * 8);
-    return await this.runTask();
+    if (!safe) {
+      await sleep(60 * 1000 * 60 * 8);
+      return await this.runTask(print, safe);
+    }
   };
 
   getTribe = () => {

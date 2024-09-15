@@ -32,3 +32,11 @@ export const getRandomInt = (min: number, max: number) => {
 export const loadReferral = () => {
   return fs.readFileSync("referral.txt", "utf8");
 };
+
+export const msToTime = (duration: number) => {
+  let seconds = Math.floor((duration / 1000) % 60),
+    minutes = Math.floor((duration / (1000 * 60)) % 60),
+    hours = Math.floor((duration / (1000 * 60 * 60)) % 24);
+
+  return `${hours}h ${minutes}m`;
+};
