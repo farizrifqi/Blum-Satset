@@ -13,6 +13,12 @@ Bot to automate any task on [Blum](https://t.me/BlumCryptoBot).
 Just run the **`start.bat`**
 It will automatically run update, installing depedencies, and run the bot.
 
+#### For Linux:
+
+1. `chmod +x start.sh`
+2. Run `./start.sh`
+   It will automatically run update, installing depedencies, and run the bot.
+
 #### Other:
 
 1. Install `npm install`
