@@ -32,4 +32,5 @@ To set your referral, just edit the `referral.txt` and edit the const `ref_XXXXX
 - [x] Auto Task
 - [x] Auto Claim Daily Rewards
 - [x] Auto Claim Friends Balance
-- [] Auto Join Tribe
+- [x] Auto Join Tribe
+- [ ] Auto Connect Wallet

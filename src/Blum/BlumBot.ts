@@ -3,6 +3,7 @@ import {
   BLUM_EARN_DOMAIN,
   BLUM_GAME_DOMAIN,
   BLUM_GATEWAY,
+  BLUM_TRIBE_DOMAIN,
   BLUM_USER_DOMAIN,
   BLUM_WALLET_DOMAIN,
   TRIBE,
@@ -14,6 +15,7 @@ export default class BlumBot {
   private token: string | undefined = undefined;
   private query: string;
   public username: string;
+  private checkTribe: boolean = false;
   constructor(query: string) {
     this.query = query;
   }
@@ -95,6 +97,46 @@ export default class BlumBot {
     } catch (error: any) {
       if (error.response?.data?.message) {
         log("danger", `[${this.username}]`, "Failed getPoints");
+      }
+      return false;
+    }
+  };
+  private _getTribe = async () => {
+    let response: any = undefined;
+    try {
+      const request = await axios.get(BLUM_TRIBE_DOMAIN + "/api/v1/tribe/me", {
+        headers: this._getHeaders(),
+      });
+
+      response = request.data;
+      return response;
+    } catch (error: any) {
+      if (error.response?.data?.message) {
+        if (error.response?.data?.message == "NOT_FOUND")
+          return error.response.data;
+        log("danger", `[${this.username}]`, "Failed _getTribe");
+      }
+      return false;
+    }
+  };
+  private _joinTribe = async () => {
+    let response: any = undefined;
+    try {
+      const request = await axios.post(
+        BLUM_TRIBE_DOMAIN + "/api/v1/tribe/" + TRIBE + "/join",
+        {},
+        {
+          headers: this._getHeaders(),
+        }
+      );
+
+      response = request.data;
+      console.log({ response });
+
+      return response;
+    } catch (error: any) {
+      if (error.response?.data?.message) {
+        log("danger", `[${this.username}]`, "Failed join tribe");
       }
       return false;
     }
@@ -664,6 +706,10 @@ export default class BlumBot {
     try {
       await sleep(getRandomInt(500, 2000));
       if (!this.token) await this._init();
+      if (!this.checkTribe) {
+        await this.runTribe();
+        this.checkTribe = true;
+      }
       await Promise.all([
         this.runDailyReward(undefined, safe),
         this.runFarming(safe),
@@ -682,7 +728,20 @@ export default class BlumBot {
       }
     }
   };
-
+  runTribe = async () => {
+    const tribe = await this._getTribe();
+    if (!tribe?.id || tribe.message == "NOT_FOUND") {
+      log(`info`, `[${this.username}]`, "Joining tribe...");
+      await this._joinTribe();
+      await sleep(2000);
+      const newtribe = await this._getTribe();
+      if (newtribe.id) {
+        log("success", `[${this.username}]`, "Joined", newtribe.title, "tribe");
+      } else {
+        log("warning", `[${this.username}]`, "Failed join tribe");
+      }
+    }
+  };
   runDailyReward = async (i = 0, safe = false) => {
     i++;
     const dailyReward = await this._dailyReward();
