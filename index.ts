@@ -25,7 +25,7 @@ const helpShow = () => {
   console.log("--safe", "\t\t", "Safe mode wihtout prompt");
   console.log(
     "\n\n",
-    'for pm2, recommended: pm2 start "bun run index.ts --nocheckv --brute"'
+    'for pm2, recommended: pm2 start "bun run index.ts --nocheckv --brute" --name "Blum"'
   );
 };
 const start = async () => {

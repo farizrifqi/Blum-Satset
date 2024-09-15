@@ -104,7 +104,7 @@ export default class BlumBot {
   private _getTribe = async () => {
     let response: any = undefined;
     try {
-      const request = await axios.get(BLUM_TRIBE_DOMAIN + "/api/v1/tribe/me", {
+      const request = await axios.get(BLUM_TRIBE_DOMAIN + "/api/v1/tribe/my", {
         headers: this._getHeaders(),
       });
 
@@ -131,12 +131,12 @@ export default class BlumBot {
       );
 
       response = request.data;
-      console.log({ response });
-
       return response;
     } catch (error: any) {
       if (error.response?.data?.message) {
-        log("danger", `[${this.username}]`, "Failed join tribe");
+        if (error.response.data.message != "USER_ALREADY_IN_TRIBE") {
+          log("danger", `[${this.username}]`, "Failed join tribe");
+        }
       }
       return false;
     }
@@ -704,7 +704,7 @@ export default class BlumBot {
   };
   run = async (safe = false) => {
     try {
-      await sleep(getRandomInt(500, 2000));
+      if (!safe) await sleep(getRandomInt(500, 2000));
       if (!this.token) await this._init();
       if (!this.checkTribe) {
         await this.runTribe();
