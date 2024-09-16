@@ -352,7 +352,7 @@ export default class BlumBot {
     try {
       const request = await axios.post(
         BLUM_GAME_DOMAIN + "/api/v1/game/claim",
-        { gameId, points: Math.floor(Math.random() * (270 - 160 + 1)) + 160 },
+        { gameId, points: Math.floor(Math.random() * (250 - 180 + 1)) + 180 },
         {
           headers: this._getHeaders(),
         }
@@ -366,7 +366,7 @@ export default class BlumBot {
           error?.response?.data?.message.toLowerCase() ==
           "game session not finished"
         ) {
-          await sleep(30000);
+          await sleep(60000);
           return await this._claimGame(gameId);
         }
         if (this._isTokenValid(error?.response?.data?.message)) {
