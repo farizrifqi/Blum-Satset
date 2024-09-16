@@ -10,7 +10,12 @@ import {
 } from "../const";
 import { log } from "../log";
 import { getRandomInt, loadReferral, sleep } from "./utils";
-import { createTonWallet, ProofData, readyProof, saveWallet } from "./wallet";
+import {
+  createTonWallet,
+  createWalletProof,
+  saveWallet,
+  WalletProof,
+} from "./wallet";
 import config from "../../config.json";
 
 const reff = loadReferral();
@@ -777,7 +782,7 @@ export default class BlumBot {
       }
     }
   };
-  private _connectWallet = async (i = 0, proofData: ProofData) => {
+  private _connectWallet = async (i = 0, proofData: WalletProof) => {
     let response: any = undefined;
     try {
       const request = await axios.post(
@@ -815,7 +820,7 @@ export default class BlumBot {
         log(`danger`, `[${this.username}]`, "Failed creating wallet...");
         return;
       }
-      const proof = await readyProof(nwallet.keyPair, nwallet.address);
+      const proof = await createWalletProof(nwallet.keyPair, nwallet.address);
       const connectwallet = await this._connectWallet(undefined, proof);
       if (connectwallet) {
         log(`success`, `[${this.username}]`, "Wallet successfully connected!");
