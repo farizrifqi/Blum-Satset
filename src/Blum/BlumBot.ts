@@ -11,6 +11,8 @@ import {
 import { log } from "../log";
 import { getRandomInt, loadReferral, sleep } from "./utils";
 import { createTonWallet, ProofData, readyProof, saveWallet } from "./wallet";
+import config from "../../config.json";
+
 const reff = loadReferral();
 export default class BlumBot {
   private token: string | undefined = undefined;
@@ -729,14 +731,25 @@ export default class BlumBot {
         await this.runTribe();
         this.checkTribe = true;
       }
-      await this.runWallet();
-      await Promise.all([
-        this.runDailyReward(undefined, safe),
-        this.runFarming(safe),
-        this.runGame(undefined, safe),
-        this.runTask(undefined, safe),
-        this.runFriendsBalance(safe),
-      ]);
+      if (config.connectWallet == 1) await this.runWallet();
+
+      let scheduleRun: any = [];
+      if (config.dailyReward == 1) {
+        scheduleRun.push(this.runDailyReward(undefined, safe));
+      }
+      if (config.farming == 1) {
+        scheduleRun.push(this.runFarming(safe));
+      }
+      if (config.playGame == 1) {
+        scheduleRun.push(this.runGame(undefined, safe));
+      }
+      if (config.runTask == 1) {
+        scheduleRun.push(this.runTask(undefined, safe));
+      }
+      if (config.friendsBalance == 1) {
+        scheduleRun.push(this.runFriendsBalance(safe));
+      }
+      await Promise.all([...scheduleRun]);
       if (!safe) {
         await sleep(60 * 1000 * 8 + 60 * 1000 * 5);
         return await this.run();
