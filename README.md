@@ -30,6 +30,10 @@ It will automatically run update, installing depedencies, and run the bot.
 
 To set your referral, just edit the `referral.txt` and edit the const `ref_XXXXXXXXX`
 
+## Wallet
+
+If the account not connecting the wallet yet, a wallet will be generated and the address and mnemonic will saved into `wallet.txt`
+
 ### Automaton
 
 - [x] Auto Register with Referral
@@ -39,4 +43,8 @@ To set your referral, just edit the `referral.txt` and edit the const `ref_XXXXX
 - [x] Auto Claim Daily Rewards
 - [x] Auto Claim Friends Balance
 - [x] Auto Join Tribe
-- [ ] Auto Connect Wallet
+- [x] Auto Connect Wallet
+
+#### Common Error
+
+If you are running with `start.bat` or `start.sh` usually new depedencies not installed. Try to run `npm install` or `bun/yarn install`.

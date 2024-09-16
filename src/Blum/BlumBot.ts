@@ -10,6 +10,7 @@ import {
 } from "../const";
 import { log } from "../log";
 import { getRandomInt, loadReferral, sleep } from "./utils";
+import { createTonWallet, ProofData, readyProof, saveWallet } from "./wallet";
 const reff = loadReferral();
 export default class BlumBot {
   private token: string | undefined = undefined;
@@ -98,6 +99,24 @@ export default class BlumBot {
       if (error.response?.data?.message) {
         log("danger", `[${this.username}]`, "Failed getPoints");
       }
+      return false;
+    }
+  };
+  private _getWallet = async () => {
+    let response: any = undefined;
+    try {
+      const request = await axios.get(
+        BLUM_WALLET_DOMAIN + "/api/v1/wallet/my/",
+        {
+          headers: this._getHeaders(),
+        }
+      );
+
+      response = request.data;
+      return response;
+    } catch (error: any) {
+      if (error.response?.data) return error.response.data;
+      log("danger", `[${this.username}]`, "Failed _getWallet");
       return false;
     }
   };
@@ -710,6 +729,7 @@ export default class BlumBot {
         await this.runTribe();
         this.checkTribe = true;
       }
+      await this.runWallet();
       await Promise.all([
         this.runDailyReward(undefined, safe),
         this.runFarming(safe),
@@ -739,6 +759,75 @@ export default class BlumBot {
         log("success", `[${this.username}]`, "Joined", newtribe.title, "tribe");
       } else {
         log("warning", `[${this.username}]`, "Failed join tribe");
+      }
+    }
+  };
+  private _connectWallet = async (i = 0, proofData: ProofData) => {
+    let response: any = undefined;
+    try {
+      const request = await axios.post(
+        BLUM_WALLET_DOMAIN + "/api/v1/wallet/connect",
+        proofData,
+        {
+          headers: this._getHeaders(),
+        }
+      );
+      response = request.data;
+      return response;
+    } catch (error: any) {
+      if (i >= 5) return false;
+      if (error.response?.data) {
+        if (this._isTokenValid(error?.response?.data?.message)) {
+          await this._errorHandler("", true);
+          return await this._connectWallet(i++, proofData);
+        }
+        await this._errorHandler(
+          error?.response?.data?.message ?? error.response?.data,
+          false
+        );
+      } else {
+        log("danger", `[${this.username}]`, "Failed to connect wallet");
+      }
+      return await this._connectWallet(i++, proofData);
+    }
+  };
+  runWallet = async () => {
+    const wallet = await this._getWallet();
+    if (wallet?.message == "wallet is not connected") {
+      log(`info`, `[${this.username}]`, "Creating wallet...");
+      const nwallet = await createTonWallet();
+      if (!nwallet) {
+        log(`danger`, `[${this.username}]`, "Failed creating wallet...");
+        return;
+      }
+      const proof = await readyProof(nwallet.keyPair, nwallet.address);
+      const connectwallet = await this._connectWallet(undefined, proof);
+      if (connectwallet) {
+        log(`success`, `[${this.username}]`, "Wallet successfully connected!");
+        log(
+          `info`,
+          `[${this.username}]`,
+          `Wallet: ${nwallet.address}`,
+          `Raw Wallet: ${nwallet.addressTON}`
+        );
+        const saveStatus = saveWallet({
+          username: this.username,
+          mnemonicPhrase: nwallet.mnemonicPhrase,
+          addressTON: nwallet.addressTON,
+          address: nwallet.address,
+        });
+        if (saveStatus) {
+          log(`success`, `[${this.username}]`, "Wallet saved");
+        } else {
+          log(
+            `danger`,
+            `[${this.username}]`,
+            "Failed save wallet",
+            JSON.stringify(wallet)
+          );
+        }
+      } else {
+        log(`danger`, `[${this.username}]`, "Failed connect wallet");
       }
     }
   };
@@ -882,7 +971,7 @@ export default class BlumBot {
       }
       if (!safe) return await this.runFarming(safe);
     } catch (err) {
-      console.log(err);
+      log("danger", `[${this.username}]`, "Error on get balance (farming)");
     }
   };
   runTask = async (print: Boolean = false, safe = false) => {
@@ -966,9 +1055,5 @@ export default class BlumBot {
       await sleep(60 * 1000 * 60 * 8);
       return await this.runTask(print, safe);
     }
-  };
-
-  getTribe = () => {
-    return TRIBE;
   };
 }
