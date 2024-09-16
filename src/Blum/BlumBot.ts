@@ -450,7 +450,7 @@ export default class BlumBot {
     let response: any = undefined;
     try {
       const request = await axios.post(
-        BLUM_GAME_DOMAIN + "/api/v1/tasks/" + id + "/validate",
+        BLUM_EARN_DOMAIN + "/api/v1/tasks/" + id + "/validate",
         { keyword },
         {
           headers: this._getHeaders(),
@@ -468,7 +468,7 @@ export default class BlumBot {
       if (error.response?.data) {
         if (this._isTokenValid(error?.response?.data?.message)) {
           await this._errorHandler("", true);
-          return await this._claimTask({ id, title });
+          return await this._verifyTask({ id, title });
         }
         await this._errorHandler(
           error?.response?.data?.message ?? error.response?.data,
