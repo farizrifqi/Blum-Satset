@@ -10,7 +10,7 @@ export const saveWallet = (data: any) => {
   try {
     fs.writeFileSync(
       "wallet.txt",
-      `${data.username}|Mnemonic:${data.mnemonicPhrase}|TonAddress:${data.addressTON}|Address:${data.address}`
+      `${data.username}|Mnemonic:${data.mnemonicPhrase}|TonAddress:${data.addressTON}|Address:${data.address}\n`
     );
     return true;
   } catch (err) {
