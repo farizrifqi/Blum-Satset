@@ -727,9 +727,11 @@ export default class BlumBot {
     try {
       if (!safe) await sleep(getRandomInt(500, 2000));
       if (!this.token) await this._init();
-      if (!this.checkTribe) {
-        await this.runTribe();
-        this.checkTribe = true;
+      if (!config.joinTribe) {
+        if (!this.checkTribe) {
+          await this.runTribe();
+          this.checkTribe = true;
+        }
       }
       if (config.connectWallet == 1) await this.runWallet();
 
