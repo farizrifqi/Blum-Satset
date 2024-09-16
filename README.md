@@ -45,6 +45,10 @@ If the account not connecting the wallet yet, a wallet will be generated and the
 - [x] Auto Join Tribe
 - [x] Auto Connect Wallet
 
+### Config
+
+`config.json` used to **enable/disable** feature that you dont want to run.
+
 #### Common Error
 
 If you are running with `start.bat` or `start.sh` usually new depedencies not installed. Try to run `npm install` or `bun/yarn install`.
