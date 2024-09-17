@@ -44,6 +44,7 @@ If the account not connecting the wallet yet, a wallet will be generated and the
 - [x] Auto Claim Friends Balance
 - [x] Auto Join Tribe
 - [x] Auto Connect Wallet
+- [x] Auto Disconnect Wallet
 
 ### Config
 
