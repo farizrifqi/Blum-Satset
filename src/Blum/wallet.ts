@@ -8,7 +8,7 @@ import TonWeb from "tonweb";
 import fs from "node:fs";
 export const saveWallet = (data: any) => {
   try {
-    fs.writeFileSync(
+    fs.appendFileSync(
       "wallet.txt",
       `${data.username}|Mnemonic:${data.mnemonicPhrase}|TonAddress:${data.addressTON}|Address:${data.address}\n`
     );
