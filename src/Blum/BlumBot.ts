@@ -728,6 +728,23 @@ export default class BlumBot {
       }
     }
   };
+  disconnect = async () => {
+    try {
+      await sleep(getRandomInt(500, 2000));
+      if (!this.token) await this._init();
+      const wallet = await this._getWallet();
+      if (wallet?.message == "wallet is not connected") {
+        log(`[${this.username}]`, "Wallet is not connected");
+        return;
+      }
+      const disconnectResponse = await this._disconnectWallet();
+      if (disconnectResponse) {
+        log("warning", `[${this.username}]`, "Wallet disconnected");
+      } else {
+        log("danger", `[${this.username}]`, "Failed disconnecting wallet");
+      }
+    } catch (err) {}
+  };
   run = async (safe = false) => {
     try {
       if (!safe) await sleep(getRandomInt(500, 2000));
@@ -809,6 +826,20 @@ export default class BlumBot {
         log("danger", `[${this.username}]`, "Failed to connect wallet");
       }
       return await this._connectWallet(i++, proofData);
+    }
+  };
+  private _disconnectWallet = async () => {
+    try {
+      const request = await axios.delete(
+        BLUM_WALLET_DOMAIN + "/api/v1/wallet/disconnect",
+        {
+          headers: this._getHeaders(),
+        }
+      );
+      return true;
+    } catch (err) {
+      log(`danger`, `[${this.username}]`, "Failed to disconnect wallet");
+      return false;
     }
   };
   runWallet = async () => {
@@ -974,7 +1005,7 @@ export default class BlumBot {
                 await sleep(
                   (new Date().getTime() -
                     balance.farming.endTime +
-                    1000 * 60 * 5) *
+                    1000 * 60 * 10) *
                     -1
                 );
               }
