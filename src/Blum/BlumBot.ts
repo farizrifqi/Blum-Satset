@@ -843,7 +843,7 @@ export default class BlumBot {
             `danger`,
             `[${this.username}]`,
             "Failed save wallet",
-            JSON.stringify(wallet)
+            JSON.stringify(nwallet)
           );
         }
       } else {
