@@ -1060,6 +1060,7 @@ export default class BlumBot {
             "53044aaf-a51f-4dfc-851a-ae2699a5f729": "HEYBLUM",
             "835d4d8a-f9af-4ff5-835e-a15d48e465e6": "CRYPTOBLUM",
             "3c048e58-6bb5-4cba-96cb-e564c046de58": "SUPERBLUM",
+            "6af85c01-f68d-4311-b78a-9cf33ba5b151": "GET",
           };
           await Promise.all(
             tasks
