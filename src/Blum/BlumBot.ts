@@ -945,11 +945,7 @@ export default class BlumBot {
   };
   runGame = async (i = 0, safe = false) => {
     if (i > 0) {
-      if (!safe) {
-        await sleep(getRandomInt(5000, 30 * 1000));
-      } else {
-        await sleep(getRandomInt(1000, 5 * 1000));
-      }
+      await sleep(getRandomInt(5000, 60 * 1000));
       const gameResult = await this._startGame();
       if (gameResult?.gameId) {
         log(
@@ -1021,7 +1017,10 @@ export default class BlumBot {
         log("info", `[${this.username}]`, "Failed to get balance (farming)");
         if (!safe) await sleep(60 * 1000 * 60 * 1);
       }
-      if (!safe) return await this.runFarming(safe);
+      if (!safe) {
+        await sleep(60 * 1000 * 15);
+        return await this.runFarming(safe);
+      }
     } catch (err) {
       log("danger", `[${this.username}]`, "Error on get balance (farming)");
     }
