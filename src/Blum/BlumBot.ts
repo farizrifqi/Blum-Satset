@@ -494,20 +494,21 @@ export default class BlumBot {
       let data: any = {
         query: `${this.query}${reff ? `` : ""}`,
       };
-      if ((reff as any) != "") {
-        data.referralToken = (reff as string).split("_")[1];
-      }
       const request = await axios.post(
         BLUM_USER_DOMAIN + "/api/v1/auth/provider/PROVIDER_TELEGRAM_MINI_APP",
         data,
         {
           headers: {
-            accept: "application/json, text/plain, */*",
-            "accept-language": "en-US,en;q=0.9",
+            Accept: "application/json, text/plain, */*",
             "content-type": "application/json",
-            origin: "https://telegram.blum.codes",
-            priority: "u=1, i",
-            referer: "https://telegram.blum.codes/",
+            "sec-ch-ua-platform": '"Windows"',
+            Priority: "u=1, i",
+            "User-Agent":
+              "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36 Edg/128.0.0.0",
+            "sec-ch-ua-mobile": "?1",
+            "sec-fetch-dest": "empty",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-site": "same-site",
           },
         }
       );
@@ -533,7 +534,7 @@ export default class BlumBot {
   private _getUserInfo = async () => {
     let response: any = undefined;
     try {
-      const request = await axios.get(BLUM_GATEWAY + "/v1/user/me", {
+      const request = await axios.get(BLUM_USER_DOMAIN + "/api/v1/user/me", {
         headers: this._getHeaders(),
       });
       response = request.data;
