@@ -17,6 +17,7 @@ import {
   WalletProof,
 } from "./wallet";
 import config from "../../config.json";
+import { fetchTask } from "./tasks";
 
 const reff = loadReferral();
 export default class BlumBot {
@@ -24,6 +25,9 @@ export default class BlumBot {
   private query: string;
   public username: string;
   private checkTribe: boolean = false;
+  private tasksKeywords: any = null;
+  private lastTaskFetch: number = new Date().getTime();
+
   constructor(query: string) {
     this.query = query;
   }
@@ -46,6 +50,29 @@ export default class BlumBot {
       "user-agent":
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36 Edg/125.0.0.0",
     };
+  };
+  private _getKeywordTasks = async (i = 0) => {
+    const currentDate = new Date().getTime();
+    if (
+      currentDate - this.lastTaskFetch > 60 * 1000 * 60 * 4 ||
+      !this.tasksKeywords
+    ) {
+      let requestTask = await fetchTask();
+      i++;
+      if (requestTask) {
+        this.lastTaskFetch = new Date().getTime();
+        this.tasksKeywords = requestTask;
+      } else {
+        if (i <= 5) {
+          await sleep(5000);
+          return await this._getKeywordTasks(i);
+        } else {
+          this.tasksKeywords = null;
+          return null;
+        }
+      }
+    }
+    return this.tasksKeywords;
   };
   private _getTask = async () => {
     let response: any = undefined;
@@ -446,7 +473,7 @@ export default class BlumBot {
     }
   };
   private _verifyTask = async ({ id, title, keyword }: any) => {
-    log("info", `[${this.username}]`, "[TASK]", title, "VERIFYING");
+    log("info", `[${this.username}]`, "[TASK]", "verifying", title);
     let response: any = undefined;
     try {
       const request = await axios.post(
@@ -576,6 +603,10 @@ export default class BlumBot {
       if (!this.token) {
         const tes = await this._refreshToken();
         if (!tes) throw new Error("");
+      }
+      if (!this.tasksKeywords) {
+        const tesTasks = await this._getKeywordTasks();
+        if (!tesTasks) throw new Error("Failed to get tasks keywords");
       }
       const userInfo = await this._getUserInfo();
       if (!userInfo?.username || userInfo?.username == undefined) return false;
@@ -1051,48 +1082,38 @@ export default class BlumBot {
           tasks.filter((task: any) => task.status == "READY_FOR_VERIFY")
             .length > 0
         ) {
-          log("info", `[${this.username}]`, "Verifying task...");
           // Verify answer
-          const keywords = {
-            "38f6dd88-57bd-4b42-8712-286a06dac0a0": "VALUE",
-            "6af85c01-f68d-4311-b78a-9cf33ba": "GO GET",
-            "d95d3299-e035-4bf6-a7ca-0f71578e9197": "BEST PROJECT EVER",
-            "53044aaf-a51f-4dfc-851a-ae2699a5f729": "HEYBLUM",
-            "835d4d8a-f9af-4ff5-835e-a15d48e465e6": "CRYPTOBLUM",
-            "3c048e58-6bb5-4cba-96cb-e564c046de58": "SUPERBLUM",
-            "6af85c01-f68d-4311-b78a-9cf33ba5b151": "GET",
-            "b611352b-0d8c-44ec-8e0f-cd71b5922ca5": "BLUMERSSS",
-            "350501e9-4fe4-4612-b899-b2daa11071fb": "CRYPTOSMART",
-            "92373c2b-2bf3-44c0-90f7-a7fd146c05c5": "HAPPYDOGS",
-          };
-          await Promise.all(
-            tasks
-              .filter(
-                (task: any) =>
-                  task.status == "READY_FOR_VERIFY" &&
-                  task.validationType == "KEYWORD"
-              )
-              .map((task: any) =>
-                sleep(getRandomInt(1000, 5000)).then(() => {
-                  if (keywords[task.id]) {
-                    if (keywords[task.id] != "") {
-                      this._verifyTask({
-                        id: task.id,
-                        title: task.title,
-                        keyword: keywords[task.id],
-                      });
+          const keywords = await this._getKeywordTasks();
+          if (keywords) {
+            await Promise.all(
+              tasks
+                .filter(
+                  (task: any) =>
+                    task.status == "READY_FOR_VERIFY" &&
+                    task.validationType == "KEYWORD"
+                )
+                .map((task: any) =>
+                  sleep(getRandomInt(1000, 5000)).then(() => {
+                    if (keywords[task.id]) {
+                      if (keywords[task.id] != "") {
+                        this._verifyTask({
+                          id: task.id,
+                          title: task.title,
+                          keyword: keywords[task.id],
+                        });
+                      }
+                    } else {
+                      log(
+                        "warning",
+                        `[${this.username}]`,
+                        "Found new task with missing keywords",
+                        `Task: ${task.title}`
+                      );
                     }
-                  } else {
-                    log(
-                      "warning",
-                      `[${this.username}]`,
-                      "Found new task with missing keywords",
-                      `Task: ${task.title}`
-                    );
-                  }
-                })
-              )
-          );
+                  })
+                )
+            );
+          }
         }
         await sleep(getRandomInt(1000, 5000));
         // Re check task
