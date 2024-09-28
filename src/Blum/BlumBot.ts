@@ -1115,7 +1115,7 @@ export default class BlumBot {
             );
           }
         }
-        await sleep(getRandomInt(1000, 5000));
+        await sleep(getRandomInt(5000, 15000));
         // Re check task
         tasks = await this.getTask(print);
         if (
