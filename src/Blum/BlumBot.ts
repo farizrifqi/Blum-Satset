@@ -18,6 +18,7 @@ import {
 } from "./wallet";
 import config from "../../config.json";
 import { fetchTask } from "./tasks";
+import { encryptPayload, getPayloadServer } from "./payload";
 
 const reff = loadReferral();
 export default class BlumBot {
@@ -28,6 +29,10 @@ export default class BlumBot {
   private tasksKeywords: any = null;
   private lastTaskFetch: number = new Date().getTime();
 
+  private dogsEligibility = false
+  private payloadServer: any = null
+  private lastPayloadServerFetch: number = new Date().getTime();
+
   constructor(query: string) {
     this.query = query;
   }
@@ -35,9 +40,7 @@ export default class BlumBot {
   private _getHeaders = (): RawAxiosRequestHeaders => {
     return {
       Authorization: "Bearer " + this.token,
-      Accept: "application/json, text/plain, */*",
-      "accept-language": "en-US,en;q=0.9",
-      "content-length": "0",
+      Accept: "application/json",
       origin: "https://telegram.blum.codes",
       priority: "u=1, i",
       "sec-ch-ua":
@@ -73,6 +76,29 @@ export default class BlumBot {
       }
     }
     return this.tasksKeywords;
+  };
+  private _getPayloadServer = async (i = 0) => {
+    const currentDate = new Date().getTime();
+    if (
+      currentDate - this.lastPayloadServerFetch > 60 * 1000 * 60 * 4 ||
+      !this.payloadServer
+    ) {
+      let payloadServer = await getPayloadServer();
+      i++;
+      if (payloadServer) {
+        this.lastTaskFetch = new Date().getTime();
+        this.payloadServer = payloadServer;
+      } else {
+        if (i <= 5) {
+          await sleep(5000);
+          return await this._getPayloadServer(i);
+        } else {
+          this.payloadServer = null;
+          return null;
+        }
+      }
+    }
+    return this.payloadServer;
   };
   private _getTask = async () => {
     let response: any = undefined;
@@ -371,6 +397,43 @@ export default class BlumBot {
       return undefined;
     }
   };
+  private _startGameV2 = async (i = 0) => {
+    i++;
+    await sleep(getRandomInt(500, 5500));
+    log("info", `[${this.username}]`, "Start game");
+    let response: any = undefined;
+    try {
+      const request = await axios.post(
+        BLUM_GAME_DOMAIN + "/api/v2/game/play",
+        {},
+        {
+          headers: this._getHeaders(),
+        }
+      );
+      response = request.data;
+      return response;
+    } catch (error: any) {
+      if (error.response?.data) {
+        if (this._isTokenValid(error?.response?.data?.message)) {
+          await this._errorHandler("", true);
+          return await this._startGameV2(i);
+        }
+        if (error?.response?.data?.message) {
+          if (error?.response?.data?.message == "cannot start game") {
+            await sleep(getRandomInt(500, 3000));
+            if (i > 5) return await this._startGameV2(i);
+          }
+        }
+        await this._errorHandler(
+          error?.response?.data?.message ?? error.response?.data,
+          false
+        );
+      } else {
+        log("danger", `[${this.username}]`, "Failed to play game V2");
+      }
+      return undefined;
+    }
+  };
   private _claimGame = async (gameId: any) => {
     let points = getRandomInt(256, 278);
 
@@ -388,6 +451,7 @@ export default class BlumBot {
       log("success", `[${this.username}]`, "Game rewarded", points);
       return response;
     } catch (error: any) {
+
       if (error.response?.data) {
         if (
           error?.response?.data?.message.toLowerCase() ==
@@ -399,6 +463,68 @@ export default class BlumBot {
         if (this._isTokenValid(error?.response?.data?.message)) {
           await this._errorHandler("", true);
           return await this._claimGame(gameId);
+        }
+        await this._errorHandler(
+          error?.response?.data?.message ?? error.response?.data,
+          false
+        );
+      } else {
+        log("danger", `[${this.username}]`, "Failed to play game");
+      }
+      return undefined;
+    }
+  };
+
+  private _claimGameV2 = async (gameId: any) => {
+
+    const points = getRandomInt(150, 225);
+    let dogs = 0;
+    if (this.dogsEligibility) dogs = getRandomInt(50, 100)
+
+    log("info", `[${this.username}]`, "Claiming game", gameId);
+    let response: any = undefined;
+
+    let payloadServer = await this._getPayloadServer()
+    payloadServer = payloadServer.filter(({ status }: { status: number }) => status == 1)
+
+    const payload = await encryptPayload(payloadServer[Math.floor(Math.random() * payloadServer.length)].id, { gameId, points, dogs })
+
+    try {
+      const request = await fetch(
+        BLUM_GAME_DOMAIN + "/api/v2/game/claim",
+        {
+          method: "POST",
+          body: JSON.stringify({ payload }),
+          headers: {
+            ...this._getHeaders() as any
+          }
+        }
+      );
+      response = await request.json();
+      if (this.dogsEligibility) {
+        log("success", `[${this.username}]`, "Game rewarded", `${points} points - ${dogs} dogs`);
+      } else {
+        log("success", `[${this.username}]`, "Game rewarded", `${points} points`);
+      }
+      return response;
+    } catch (error: any) {
+      if (error.response?.data) {
+        if (
+          error?.response?.data?.message.toLowerCase() ==
+          "game session not finished"
+        ) {
+          await sleep(3000);
+          return await this._claimGameV2(gameId);
+        }
+        if (
+          error?.response?.data?.message.toLowerCase() ==
+          "cannot decrypt claim payload"
+        ) {
+          return false;
+        }
+        if (this._isTokenValid(error?.response?.data?.message)) {
+          await this._errorHandler("", true);
+          return await this._claimGameV2(gameId);
         }
         await this._errorHandler(
           error?.response?.data?.message ?? error.response?.data,
@@ -776,12 +902,28 @@ export default class BlumBot {
       } else {
         log("danger", `[${this.username}]`, "Failed disconnecting wallet");
       }
-    } catch (err) {}
+    } catch (err) { }
   };
+
+  checkDogsEligibility = async () => {
+    const eligibility = await this._dogsEligibility()
+    if (eligibility != null) {
+      if (eligibility) {
+        this.dogsEligibility = true
+        log("success", `[${this.username}]`, "Eligible for $DOGS");
+      } else {
+        log("warning", `[${this.username}]`, "NOT eligible for $DOGS");
+      }
+    } else {
+      log("warning", `[${this.username}]`, "Cannot check $DOGS eligibility");
+    }
+  }
   run = async (safe = false) => {
     try {
       if (!safe) await sleep(getRandomInt(500, 2000));
       if (!this.token) await this._init();
+      await this.checkDogsEligibility()
+
       if (!config.joinTribe) {
         if (!this.checkTribe) {
           await this.runTribe();
@@ -798,7 +940,7 @@ export default class BlumBot {
         scheduleRun.push(this.runFarming(safe));
       }
       if (config.playGame == 1) {
-        scheduleRun.push(this.runGame(undefined, safe));
+        scheduleRun.push(this.runGameV2(undefined, safe));
       }
       if (config.runTask == 1) {
         scheduleRun.push(this.runTask(undefined, safe));
@@ -1006,6 +1148,43 @@ export default class BlumBot {
       return await this.runGame(0, safe);
     }
   };
+  runGameV2 = async (i = 0, safe = false) => {
+    const checkPayload = await this._getPayloadServer()
+    if (!checkPayload) {
+      log(`[${this.username}]`, "No payload server found.")
+      await sleep(1000 * 60 * 60 * 8 + 1000 * 60 * 5);
+      return await this.runGameV2(0, safe);
+    }
+    if (i > 0) {
+      await sleep(getRandomInt(2000, 5 * 1000));
+      const gameResult = await this._startGameV2();
+      if (gameResult?.gameId) {
+        log(
+          "success",
+          `[${this.username}]`,
+          "Game completed",
+          gameResult.gameId
+        );
+        await this._claimGameV2(gameResult.gameId);
+      }
+      if (i - 1 > 0) return await this.runGameV2(i - 1, safe);
+    } else {
+      const balance = await this._getBalance();
+      if (balance) {
+        if (balance.playPasses > 0) {
+          return await this.runGameV2(balance.playPasses, safe);
+        }
+        log(`[${this.username}]`, "No game passes");
+      } else {
+        log("info", `[${this.username}]`, "Failed to get game pass");
+        if (!safe) await sleep(1000 * 60 * 5);
+      }
+    }
+    if (!safe) {
+      await sleep(1000 * 60 * 60 * 8 + 1000 * 60 * 5);
+      return await this.runGameV2(0, safe);
+    }
+  };
   runFarming = async (safe = false) => {
     try {
       log(`[${this.username}]`, "[FARMING]");
@@ -1022,8 +1201,8 @@ export default class BlumBot {
               if (!safe) {
                 await sleep(
                   nBalance.farming.endTime -
-                    new Date().getTime() +
-                    1000 * 60 * 5
+                  new Date().getTime() +
+                  1000 * 60 * 5
                 );
               }
             }
@@ -1035,7 +1214,7 @@ export default class BlumBot {
                   (new Date().getTime() -
                     balance.farming.endTime +
                     1000 * 60 * 10) *
-                    -1
+                  -1
                 );
               }
             }
@@ -1144,4 +1323,48 @@ export default class BlumBot {
       return await this.runTask(print, safe);
     }
   };
+  private _dogsEligibility = async () => {
+    let response: any = undefined;
+    try {
+      const request = await axios.get(
+        BLUM_GAME_DOMAIN + "/api/v2/game/eligibility/dogs_drop",
+
+        {
+          headers: this._getHeaders(),
+        }
+      );
+      response = request.data;
+      return response.eligible;
+    } catch (error: any) {
+      if (error.response?.data) {
+        if (
+          error?.response?.data?.message.toLowerCase() ==
+          "game session not finished"
+        ) {
+          return await this._dogsEligibility();
+        }
+        if (this._isTokenValid(error?.response?.data?.message)) {
+          await this._errorHandler("", true);
+          return await this._dogsEligibility();
+        }
+        await this._errorHandler(
+          error?.response?.data?.message ?? error.response?.data,
+          false
+        );
+      } else {
+        log("danger", `[${this.username}]`, "Failed to check DOGS eligibility");
+      }
+      return undefined;
+    }
+  };
+  test = async (safe = false) => {
+    try {
+      if (!safe) await sleep(getRandomInt(500, 2000));
+      if (!this.token) await this._init();
+      const elig = await this._dogsEligibility()
+    } catch (err) {
+      console.log(err)
+    }
+  };
 }
+
