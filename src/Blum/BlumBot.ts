@@ -477,7 +477,7 @@ export default class BlumBot {
 
   private _claimGameV2 = async (gameId: any) => {
 
-    const points = getRandomInt(150, 225);
+    const points = getRandomInt(100, 200);
     let dogs = 0;
     if (this.dogsEligibility) dogs = getRandomInt(50, 100)
 
