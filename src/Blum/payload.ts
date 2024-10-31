@@ -32,3 +32,31 @@ export const encryptPayload = async (server: string, { gameId, points, dogs }:
         return null
     }
 }
+
+export const encryptPayloadV2 = async ({ gameId, points, dogs }:
+    { gameId: string, points: number, dogs?: number }) => {
+    const Blum: any = await import("../lib/worker.js").then(module => module.Blum);
+
+    try {
+        const challenge = Blum.getChallenge(gameId);
+        const uuidChallenge = Blum.getUUID();
+
+        const payload = Blum.getPayload(
+            gameId,
+            {
+                id: uuidChallenge,
+                nonce: challenge.nonce,
+                hash: challenge.hash,
+            },
+            {
+                CLOVER: {
+                    amount: points.toString(),
+                }
+            }
+        );
+        return payload
+    } catch (err) {
+        console.log(`error encryptPayloadV2`)
+        return null
+    }
+}

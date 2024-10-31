@@ -18,7 +18,7 @@ import {
 } from "./wallet";
 import config from "../../config.json";
 import { fetchTask } from "./tasks";
-import { encryptPayload, getPayloadServer } from "./payload";
+import { encryptPayload, encryptPayloadV2, getPayloadServer } from "./payload";
 
 const reff = loadReferral();
 export default class BlumBot {
@@ -479,15 +479,16 @@ export default class BlumBot {
 
     const points = getRandomInt(100, 200);
     let dogs = 0;
-    if (this.dogsEligibility) dogs = getRandomInt(50, 100)
+    if (this.dogsEligibility) dogs = getRandomInt(5, 10) * 0.1
 
     log("info", `[${this.username}]`, "Claiming game", gameId);
     let response: any = undefined;
 
-    let payloadServer = await this._getPayloadServer()
-    payloadServer = payloadServer.filter(({ status }: { status: number }) => status == 1)
+    // let payloadServer = await this._getPayloadServer()
+    // payloadServer = payloadServer.filter(({ status }: { status: number }) => status == 1)
+    // const payload = await encryptPayload(payloadServer[Math.floor(Math.random() * payloadServer.length)].id, { gameId, points, dogs })
 
-    const payload = await encryptPayload(payloadServer[Math.floor(Math.random() * payloadServer.length)].id, { gameId, points, dogs })
+    const payload = await encryptPayloadV2({ gameId, points, dogs })
 
     try {
       const request = await fetch(
