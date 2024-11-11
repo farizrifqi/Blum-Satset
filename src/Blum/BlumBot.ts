@@ -18,7 +18,7 @@ import {
 } from "./wallet";
 import config from "../../config.json";
 import { fetchTask } from "./tasks";
-import { encryptPayload, encryptPayloadV2, getPayloadServer } from "./payload";
+import { encryptPayloadV3, getPayloadServer } from "./payload";
 
 const reff = loadReferral();
 export default class BlumBot {
@@ -478,18 +478,14 @@ export default class BlumBot {
   private _claimGameV2 = async (gameId: any) => {
 
     const points = getRandomInt(100, 200);
+    const freeze = getRandomInt(0, 4);
     let dogs = 0;
     if (this.dogsEligibility) dogs = getRandomInt(5, 10) * 0.1
 
     log("info", `[${this.username}]`, "Claiming game", gameId);
     let response: any = undefined;
-
-    // let payloadServer = await this._getPayloadServer()
-    // payloadServer = payloadServer.filter(({ status }: { status: number }) => status == 1)
-    // const payload = await encryptPayload(payloadServer[Math.floor(Math.random() * payloadServer.length)].id, { gameId, points, dogs })
-
-    const payload = await encryptPayloadV2({ gameId, points, dogs })
-
+    await sleep(freeze * 10)
+    const payload = await encryptPayloadV3({ gameId, points, dogs, freeze })
     try {
       const request = await fetch(
         BLUM_GAME_DOMAIN + "/api/v2/game/claim",
@@ -497,16 +493,13 @@ export default class BlumBot {
           method: "POST",
           body: JSON.stringify({ payload }),
           headers: {
-            ...this._getHeaders() as any
+            ...this._getHeaders() as any,
+            "content-type": "application/json"
           }
         }
       );
-      response = await request.json();
-      if (this.dogsEligibility) {
-        log("success", `[${this.username}]`, "Game rewarded", `${points} points - ${dogs} dogs`);
-      } else {
-        log("success", `[${this.username}]`, "Game rewarded", `${points} points`);
-      }
+      response = await request.text()
+      if (response.includes("OK")) return true
       return response;
     } catch (error: any) {
       if (error.response?.data) {
@@ -523,6 +516,11 @@ export default class BlumBot {
         ) {
           return false;
         }
+        if (
+          error?.response?.data?.message.toLowerCase().includes("unprocessable entity")
+        ) {
+          return false;
+        }
         if (this._isTokenValid(error?.response?.data?.message)) {
           await this._errorHandler("", true);
           return await this._claimGameV2(gameId);
@@ -532,7 +530,7 @@ export default class BlumBot {
           false
         );
       } else {
-        log("danger", `[${this.username}]`, "Failed to play game");
+        log("danger", `[${this.username}]`, "Failed to claim game");
       }
       return undefined;
     }
@@ -1157,8 +1155,8 @@ export default class BlumBot {
       return await this.runGameV2(0, safe);
     }
     if (i > 0) {
-      await sleep(getRandomInt(2000, 5 * 1000));
       const gameResult = await this._startGameV2();
+      await sleep(35 * 1000);
       if (gameResult?.gameId) {
         log(
           "success",
