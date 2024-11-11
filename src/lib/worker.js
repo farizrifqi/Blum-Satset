@@ -166,7 +166,6 @@ function D(e) {
     }
 }
 function F(e, n, t, r) {
-    console.log(e, n, t, r)
     let o, f;
     try {
         const j = _.__wbindgen_add_to_stack_pointer(-16)
